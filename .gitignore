@@ -1,2 +1,3 @@
 node_modules/
-.vscode/2eé
+.vscode/
+models/index.js

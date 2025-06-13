@@ -4,7 +4,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const userRoutes = require('./routes/userRoutes');
-//const authRoutes = require('./routes/auth');         //Changement du nom du fichier
 const dashboardRoutes = require('./routes/dashboard'); 
 const { sequelize } = require('./Models'); 
 
@@ -14,7 +13,6 @@ app.use(express.json());
 app.use(cors()) ;
 
 app.use('/api/auth', userRoutes);
-//app.use('/api/auth', authRoutes);              //Changement du nom du fichier
 app.use('/api', dashboardRoutes); 
 
 const PORT = process.env.PORT || 5000;
