@@ -18,10 +18,7 @@ const Goal = sequelize.define('Goal', {
   frequency: {
     type: DataTypes.ENUM('daily', 'weekly', 'monthly', 'yearly'),
     allowNull: false,
-  },
-  deadline: {
-    type: DataTypes.DATE,
-  },
+  }
 });
 
 module.exports = Goal;

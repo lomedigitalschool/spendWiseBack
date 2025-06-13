@@ -27,7 +27,6 @@ const addGoal = async (req, res) => {
     const goal = await Goal.create({
       targetAmount,
       frequency,
-      deadline,
       CategoryId,
       UserId: req.user.id,
     });
@@ -56,7 +55,6 @@ const updateGoal = async (req, res) => {
     goal.targetAmount = targetAmount || goal.targetAmount;
     goal.currentAmount = currentAmount || goal.currentAmount;
     goal.frequency = frequency || goal.frequency;
-    goal.deadline = deadline || goal.deadline;
     goal.CategoryId = CategoryId || goal.CategoryId;
 
     const updatedGoal = await goal.save();
