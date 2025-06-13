@@ -1,26 +1,36 @@
-const { User, Category } = require('../models');
+const { Category } = require('../models');
 
 async function createInitialData() {
   try {
-    // Créer des catégories par défaut
     const defaultCategories = [
-      'Alimentation',
-      'Logement',
-      'Transport',
-      'Loisirs',
-      'Santé',
-      'Éducation',
-      'Autres',
+      { name: 'Alimentation'},
+      { name: 'Logement'},
+      { name: 'Transport'},
+      { name: 'Loisirs'},
+      { name: 'Santé'},
+      { name: 'Éducation'},
+      { name: 'Autres'}
     ];
 
-    for (const name of defaultCategories) {
-      await Category.findOrCreate({ where: { name } });
+    for (const category of defaultCategories) {
+      await Category.findOrCreate({ 
+        where: { name: category.name },
+        
+      });
     }
 
-    console.log('Initial data created successfully');
+    console.log('✅ initial data created successfully!', defaultCategories.map(c => c.name).join(', '));
   } catch (error) {
-    console.error('Error creating initial data:', error);
+    console.error('❌ Erreur:', error.message);
+  } finally {
+    process.exit(); // Ferme la connexion après exécution
   }
 }
 
-createInitialData();
+// ...existing code...
+
+const sequelize = require('../config/db');
+
+sequelize.authenticate()
+  .then(() => createInitialData())
+  .catch(err => console.error('❌ Error: unable to connect to the database', err));

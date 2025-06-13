@@ -1,8 +1,8 @@
-const sequelize = require('../config/db');
-const User = require('./user.model');
-const Category = require('./category.model');
-const Transaction = require('./transaction.model');
-const Goal = require('./goal.model');
+const sequelize = require('../config/db.js');
+const User = require('./user.model.js');
+const Category = require('./category.model.js');
+const Transaction = require('./transaction.model.js');
+const Goal = require('./goal.model.js');
 
 // Associations
 User.hasMany(Transaction);
