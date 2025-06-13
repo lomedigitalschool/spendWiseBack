@@ -19,7 +19,7 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-
-db.User = require('./user')(sequelize, DataTypes);
+db.User = require('./user.model')(sequelize, DataTypes);
+//db.User = require('./user')(sequelize, DataTypes);         //Changement du nom du fichier
 
 module.exports = db;
