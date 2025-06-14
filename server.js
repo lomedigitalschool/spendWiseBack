@@ -23,6 +23,8 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api', statsRoutes); // pour /transactions/stats/* et /goals/compare
+app.use('/api/stats', require('./routes/statsRoutes'));
+
 
 // Route de test
 app.get('/', (req, res) => res.send('✅ API Budget App opérationnelle'));

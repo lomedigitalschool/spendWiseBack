@@ -106,12 +106,19 @@ const getTransactions = async (req, res) => {
 // @route   POST /api/transactions
 // @access  Private
 const addTransaction = async (req, res) => {
-  const { amount, type, description, CategoryId } = req.body;
+  console.log('Données reçues:', req.body);
+  if (!req.body.amount || !req.body.type) {
+  return res.status(400).json({ message: 'amount et type sont obligatoires.' });
+}
+
+
+  const { amount, type, description, date, CategoryId } = req.body;
 
   try {
     const transaction = await Transaction.create({
       amount,
       type,
+      date: new Date(), // Utilise la date actuelle
       description,
       CategoryId,
       UserId: req.user.id,
