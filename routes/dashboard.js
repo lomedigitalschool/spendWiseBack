@@ -1,12 +1,10 @@
-
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middleware/authMiddleware');
-const auth = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
-router.get('/dashboard', authMiddleware, (req, res) => {
-  res.json({ message: `Bienvenue utilisateur ${req.user.userId}` });
-  
+// ✅ Middleware protect correctement appliqué
+router.get('/dashboard', protect, (req, res) => {
+  res.json({ message: `Bienvenue utilisateur ${req.user.id}` });
 });
 
 module.exports = router;

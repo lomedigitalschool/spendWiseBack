@@ -1,17 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const { getTransactions, addTransaction, deleteTransaction } = require('../controllers/transaction.controller');
-const auth = require('../middleware/authMiddleware');
-const transactionController = require('../controllers/transaction.controller');
 
+const {
+  getTransactions,
+  addTransaction,
+  deleteTransaction,
+  getAllTransactions,
+} = require('../controllers/transaction.controller');
 
+const { protect } = require('../middleware/authMiddleware');
+
+// ✅ Routes protégées par le middleware
 router.route('/')
-  .get(auth, getTransactions)
-  .post(auth, addTransaction);
+  .get(protect, getTransactions)      // Avec pagination/filtrage
+  .post(protect, addTransaction);     // Création
 
-router.get('/transactions', auth, transactionController.getAllTransactions);
+router.get('/all', protect, getAllTransactions); // Toutes les transactions non filtrées
 
 router.route('/:id')
-  .delete(auth, deleteTransaction);
+  .delete(protect, deleteTransaction); // Suppression par ID
 
 module.exports = router;

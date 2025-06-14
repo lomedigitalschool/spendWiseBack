@@ -1,11 +1,11 @@
-const { Transaction, Category } = require('../models');
-const { User } = require('../models');
-
+const { Transaction, Category, User } = require('../models');
 const { Op } = require('sequelize');
 
-exports.getTransactions = async (req, res) => {
+// @desc    Get paginated and filtered transactions
+// @route   GET /api/transactions
+// @access  Private
+const getTransactions = async (req, res) => {
   try {
-    // 1. Récupération et validation des paramètres
     const { 
       startDate, 
       endDate, 
@@ -15,10 +15,9 @@ exports.getTransactions = async (req, res) => {
       limit = 10 
     } = req.query;
 
-    // 2. Construction de la clause WHERE
     const where = { 
       UserId: req.user.id,
-      ...(type && { type }), // Filtre par type si fourni
+      ...(type && { type }),
       ...(categoryId && { CategoryId: categoryId }),
       ...((startDate || endDate) && {
         date: {
@@ -28,10 +27,8 @@ exports.getTransactions = async (req, res) => {
       })
     };
 
-    // 3. Pagination
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
-    // 4. Requête optimisée
     const { count, rows } = await Transaction.findAndCountAll({
       where,
       limit: parseInt(limit),
@@ -40,12 +37,11 @@ exports.getTransactions = async (req, res) => {
       include: {
         model: Category,
         attributes: ['id', 'name'],
-        where: categoryId ? { id: categoryId } : undefined // Optimise la jointure si categoryId est fourni
+        where: categoryId ? { id: categoryId } : undefined
       },
-      attributes: { exclude: ['updatedAt'] } // Masque les champs inutiles
+      attributes: { exclude: ['updatedAt'] }
     });
 
-    // 5. Réponse standardisée
     res.json({
       success: true,
       data: {
@@ -69,48 +65,31 @@ exports.getTransactions = async (req, res) => {
   }
 };
 
-
-// ...autres exports...
+// @desc    Get all transactions (no filters, no pagination)
+// @route   GET /api/transactions/all
+// @access  Private
 const getAllTransactions = async (req, res) => {
   try {
     const transactions = await Transaction.findAll({
       where: { UserId: req.user.id },
       include: [{ model: Category, attributes: ['name'] }],
-      order: [['date', 'DESC']],
+      order: [['date', 'DESC']]
     });
     res.json(transactions);
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
 };
-// ...autres exports...
 
-// @desc    Get all transactions for a user
-// @route   GET /api/transactions
-// @access  Private
-const getTransactions = async (req, res) => {
-  try {
-    const transactions = await Transaction.findAll({
-      where: { UserId: req.user.id },
-      include: [{ model: Category, attributes: ['name'] }],
-      order: [['date', 'DESC']],
-    });
-
-    res.json(transactions);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// @desc    Add a transaction
+// @desc    Add a new transaction
 // @route   POST /api/transactions
 // @access  Private
 const addTransaction = async (req, res) => {
   console.log('Données reçues:', req.body);
-  if (!req.body.amount || !req.body.type) {
-  return res.status(400).json({ message: 'amount et type sont obligatoires.' });
-}
 
+  if (!req.body.amount || !req.body.type) {
+    return res.status(400).json({ message: 'amount et type sont obligatoires.' });
+  }
 
   const { amount, type, description, date, CategoryId } = req.body;
 
@@ -118,13 +97,12 @@ const addTransaction = async (req, res) => {
     const transaction = await Transaction.create({
       amount,
       type,
-      date: new Date(), // Utilise la date actuelle
+      date: date ? new Date(date) : new Date(),
       description,
       CategoryId,
-      UserId: req.user.id,
+      UserId: req.user.id
     });
 
-    // Mettre à jour le solde de l'utilisateur
     const user = await User.findByPk(req.user.id);
     if (type === 'income') {
       user.balance += parseFloat(amount);
@@ -135,9 +113,9 @@ const addTransaction = async (req, res) => {
 
     res.status(201).json(transaction);
   } catch (error) {
-  console.error('Erreur addTransaction:', error); // Ajoute ce log
-  res.status(500).json({ message: 'Server error' });
-}
+    console.error('Erreur addTransaction:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // @desc    Delete a transaction
@@ -146,14 +124,13 @@ const addTransaction = async (req, res) => {
 const deleteTransaction = async (req, res) => {
   try {
     const transaction = await Transaction.findOne({
-      where: { id: req.params.id, UserId: req.user.id },
+      where: { id: req.params.id, UserId: req.user.id }
     });
 
     if (!transaction) {
       return res.status(404).json({ message: 'Transaction not found' });
     }
 
-    // Mettre à jour le solde de l'utilisateur
     const user = await User.findByPk(req.user.id);
     if (transaction.type === 'income') {
       user.balance -= parseFloat(transaction.amount);
@@ -173,5 +150,5 @@ module.exports = {
   getTransactions,
   addTransaction,
   deleteTransaction,
-  getAllTransactions,
+  getAllTransactions
 };

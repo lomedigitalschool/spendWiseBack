@@ -1,14 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const { getGoals, addGoal, updateGoal, deleteGoal } = require('../controllers/goal.controller');
-const auth = require('../middleware/authMiddleware');
 
+const {
+  getGoals,
+  addGoal,
+  updateGoal,
+  deleteGoal,
+} = require('../controllers/goal.controller');
+
+const { protect } = require('../middleware/authMiddleware');
+
+// ✅ Routes protégées par middleware JWT
 router.route('/')
-  .get(auth, getGoals)
-  .post(auth, addGoal);
+  .get(protect, getGoals)
+  .post(protect, addGoal);
 
 router.route('/:id')
-  .put(auth, updateGoal)
-  .delete(auth, deleteGoal);
+  .put(protect, updateGoal)
+  .delete(protect, deleteGoal);
 
 module.exports = router;

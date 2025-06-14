@@ -4,35 +4,46 @@ const { Op } = require('sequelize');
 // 3. Comparaison objectifs vs dépenses
 exports.getGoalProgress = async (req, res) => {
   try {
+    const year = parseInt(req.query.year) || new Date().getFullYear();
+    const month = parseInt(req.query.month) || (new Date().getMonth() + 1); // 1 à 12
+
+    const startDate = new Date(year, month - 1, 1); // premier jour du mois
+    const endDate = new Date(year, month, 0, 23, 59, 59); // dernier jour du mois
+
     const goals = await Goal.findAll({
-      where: { 
+      where: {
         UserId: req.user.id,
-        frequency: 'monthly' 
+        frequency: 'monthly'
       },
       include: { model: Category }
     });
 
     const progress = await Promise.all(goals.map(async (goal) => {
       const expenses = await Transaction.sum('amount', {
-        where: { 
+        where: {
           UserId: req.user.id,
           type: 'expense',
           CategoryId: goal.CategoryId,
-          date: { 
-            [Op.between]: [
-              new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-              new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0)
-            ]
+          date: {
+            [Op.between]: [startDate, endDate]
           }
         }
       });
 
+      const current = expenses || 0;
+      const target = goal.targetAmount;
+      const percent = target > 0 ? Math.round((current / target) * 100) : 0;
+
       return {
         goalId: goal.id,
         category: goal.Category.name,
-        target: goal.targetAmount,
-        current: expenses || 0,
-        progress: Math.round(((expenses || 0) / goal.targetAmount) * 100)
+        target,
+        current,
+        progress: percent,
+        month,
+        year,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString()
       };
     }));
 

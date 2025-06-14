@@ -10,13 +10,12 @@ const {
   getGoalProgress,
 } = require('../controllers/goalStats.controller');
 
-const authMiddleware = require('../middleware/authMiddleware');
-const { protect } = authMiddleware;
+const { protect } = require('../middleware/authMiddleware');
 
-// ✅ Routes sécurisées avec le middleware d'authentification
-router.get('/transactions/stats/categories', getCategoryStats);
-router.get('/transactions/stats/monthly', getMonthlyStats);
-router.get('/goals/compare', getGoalProgress);
-router.get('/goals/stats', getGoalProgress); // même logique que compare
+// ✅ Routes sécurisées avec le middleware protect
+router.get('/transactions/stats/categories', protect, getCategoryStats);
+router.get('/transactions/stats/monthly', protect, getMonthlyStats);
+router.get('/goals/compare', protect, getGoalProgress);
+router.get('/goals/stats', protect, getGoalProgress); // identique à compare
 
 module.exports = router;
