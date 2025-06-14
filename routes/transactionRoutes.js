@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getTransactions, addTransaction, deleteTransaction } = require('../controllers/transaction.controller');
-const auth = require('../middlewares/auth');
+const auth = require('../middleware/authMiddleware');
 const transactionController = require('../controllers/transaction.controller');
 
 

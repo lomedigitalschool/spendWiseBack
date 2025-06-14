@@ -11,5 +11,6 @@ module.exports = {
     await queryInterface.addColumn('Goals', 'deadline', {
       type: Sequelize.DATE,
     });
+    
   }
 };
