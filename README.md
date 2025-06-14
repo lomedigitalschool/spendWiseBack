@@ -1,144 +1,192 @@
-Voici un **README.md** professionnel et complet pour votre projet Budget App Backend :
+# SpendWiseBack – Backend
+
+## Présentation
+
+**SpendWiseBack** est le backend d’une application de gestion budgétaire personnelle. Il expose une API REST sécurisée permettant la gestion des utilisateurs, des transactions, des objectifs financiers, des catégories et la génération de statistiques.  
+Ce backend est développé en **Node.js** avec **Express** et utilise **PostgreSQL** via **Sequelize** comme ORM.
 
 ---
 
-# Budget App Backend
+## Sommaire
 
-## 📌 Description
-Backend Node.js/Express pour une application de gestion budgétaire offrant :
-- **Authentification** sécurisée (JWT)
-- **Gestion des transactions** (revenus/dépenses)
-- **Suivi d'objectifs** financiers
-- **Statistiques** détaillées pour visualisations
-- API RESTful conforme aux meilleures pratiques
+- [Fonctionnalités](#fonctionnalités)
+- [Architecture et Structure du projet](#architecture-et-structure-du-projet)
+- [Prérequis](#prérequis)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Lancement du serveur](#lancement-du-serveur)
+- [Principales routes de l’API](#principales-routes-de-lapi)
+- [Sécurité](#sécurité)
+- [Bonnes pratiques](#bonnes-pratiques)
+- [Contribution](#contribution)
+- [Licence](#licence)
+- [Contact](#contact)
 
-## 🚀 Fonctionnalités
-| Module | Endpoints | Description |
-|--------|-----------|-------------|
-| **Authentification** | `POST /register`<br>`POST /login` | Création de compte et connexion sécurisée |
-| **Transactions** | `GET/POST /transactions`<br>`DELETE /transactions/:id` | Gestion CRUD des opérations financières |
-| **Objectifs** | `GET/POST /goals`<br>`PUT/DELETE /goals/:id` | Définition et suivi des objectifs mensuels |
-| **Statistiques** | `GET /stats/categories`<br>`GET /stats/monthly` | Données pour graphiques et analyses |
-| **Catégories** | `GET /categories` | Liste des catégories de transactions |
+---
 
-## 📦 Structure du Projet
+## Fonctionnalités
+
+- Authentification JWT (inscription, connexion)
+- Gestion des utilisateurs
+- Gestion des transactions (ajout, consultation, suppression, modification)
+- Gestion des objectifs financiers (goals)
+- Gestion des catégories
+- Statistiques financières personnalisées
+- Sécurité des routes protégées
+- Migrations et seeders Sequelize
+
+---
+
+## Architecture et Structure du projet
+
 ```
-budget-app-backend/
-├── config/
-│   ├── db.js              # Configuration de la base de données
-├── controllers/
-│   ├── auth.controller.js # Authentification
-│   ├── transaction.controller.js 
-│   ├── goal.controller.js
-│   ├── stats.controller.js
-├── models/
-│   ├── User.js            # Modèle utilisateur
-│   ├── Transaction.js     # Modèle transaction
-│   ├── Goal.js            # Modèle objectif
-├── routes/
-│   ├── authRoutes.js
-│   ├── transactionRoutes.js
-│   ├── goalRoutes.js
-├── seeders/               # Données initiales
-├── .env.example           # Variables d'environnement
-├── app.js                 # Point d'entrée
+.
+├── config/           # Configuration Sequelize et base de données
+├── controllers/      # Logique métier des routes
+├── migrations/       # Scripts de migration Sequelize
+├── models/           # Modèles Sequelize
+├── routes/           # Définition des routes Express
+├── seeders/          # Données d’exemple (optionnel)
+├── middleware/       # Middlewares Express (auth, etc.)
+├── server.js         # Point d’entrée principal
+├── .env.example      # Exemple de configuration d'environnement
+├── package.json      # Dépendances et scripts npm
+└── README.md         # Documentation du projet
 ```
 
-## 🔧 Technologies
-- **Node.js** (v18+)
-- **Express** (Framework web)
-- **PostgreSQL** (Base de données)
-- **Sequelize** (ORM)
-- **JWT** (Authentification)
-- **Bcrypt** (Hachage des mots de passe)
+---
 
-## 🛠️ Installation
-1. **Cloner le dépôt** :
-   ```bash
-   git clone https://github.com/votre-repo/budget-app-backend.git
-   cd budget-app-backend
+## Prérequis
+
+- [Node.js](https://nodejs.org/) (v16+ recommandé)
+- [npm](https://www.npmjs.com/)
+- [PostgreSQL](https://www.postgresql.org/) (v12+ recommandé)
+
+---
+
+## Installation
+
+1. **Cloner le dépôt**
+   ```sh
+   git clone https://github.com/lomedigitalschool/spendWiseBack.git
+   cd spendWiseBack
    ```
 
-2. **Installer les dépendances** :
-   ```bash
+2. **Installer les dépendances**
+   ```sh
    npm install
    ```
 
-3. **Configurer l'environnement** :
-   - Copier `.env.example` vers `.env`
-   - Remplir les variables :
-     ```env
-     DB_USER=votre_utilisateur
-     DB_PASSWORD=votre_mdp
-     DB_NAME=gestionnaire_db
-     JWT_SECRET=votre_secret
+---
+
+## Configuration
+
+1. **Configurer l’environnement**
+   - Copier `.env.example` en `.env` et adapter les variables (DB, JWT_SECRET, etc.) :
+     ```
+     DB_NAME=your_db
+     DB_USER=your_user
+     DB_PASSWORD=your_password
+     DB_HOST=localhost
+     DB_PORT=5432
+     JWT_SECRET=your_jwt_secret
      ```
 
-4. **Démarrer le serveur** :
-   ```bash
-   npm run dev
+2. **Créer la base de données PostgreSQL**
+   - Via pgAdmin ou psql :
+     ```sql
+     CREATE DATABASE your_db;
+     ```
+
+3. **Lancer les migrations Sequelize**
+   ```sh
+   npx sequelize-cli db:migrate
    ```
-   *Le serveur écoute sur http://localhost:5000*
 
-## 📚 Documentation API
-[Documentation complète des endpoints](#) [text](../../Downloads/deepseek_markdown_20250613_04f2e2.pdf)
+4. **(Optionnel) Lancer les seeders**
+   ```sh
+   npx sequelize-cli db:seed:all
+   ```
 
-Exemple de requête :
-```bash
-curl -X POST http://localhost:5000/api/transactions \
-  -H "Authorization: Bearer VOTRE_JWT" \
-  -H "Content-Type: application/json" \
-  -d '{"amount": 100, "type": "income", "CategoryId": 1}'
+---
+
+## Lancement du serveur
+
+```sh
+npm start
 ```
+Le serveur démarre par défaut sur le port `5000` (modifiable dans `.env`).
 
-## 🧪 Tests
-Lancer les tests avec :
-```bash
-npm test
-```
+---
 
-**Couverture des tests** :
-- Authentification
-- Validation des données
-- Gestion des erreurs
+## Principales routes de l’API
 
-## 🔄 Workflow Git
-```mermaid
-graph LR
-  A[Feature Branch] --> B[Pull Request]
-  B --> C[Revue de Code]
-  C --> D[Merge sur Main]
-  D --> E[Déploiement Staging]
-```
+### Authentification & Utilisateur
 
-## 🌐 Déploiement
-**Prérequis** :
-- PostgreSQL configuré
-- Variables d'environnement définies
+- `POST /api/users/register` – Inscription
+- `POST /api/users/login` – Connexion
+- `GET /api/users/profile` – Infos utilisateur connecté (JWT requis)
 
-**Méthodes** :
-1. **Local** :
-   ```bash
-   npm start
-   ```
+### Transactions
 
-2. **Docker** :
-   ```bash
-   docker-compose up --build
-   ```
+- `GET /api/transactions` – Liste des transactions de l’utilisateur (JWT requis)
+- `POST /api/transactions` – Ajouter une transaction (JWT requis)
+- `DELETE /api/transactions/:id` – Supprimer une transaction (JWT requis)
+- `GET /api/transactions/transactions` – Lister toutes les transactions (JWT requis, usage admin/debug)
 
-3. **Heroku** :
-   ```bash
-   heroku create
-   git push heroku main
-   ```
+### Objectifs (Goals)
 
-## 🤝 Contribution
-1. Forker le projet
-2. Créer une branche (`git checkout -b feature/ma-fonctionnalite`)
-3. Commiter (`git commit -m 'Ajout ma-fonctionnalite'`)
-4. Pusher (`git push origin feature/ma-fonctionnalite`)
-5. Ouvrir une Pull Request
+- `GET /api/goals` – Liste des objectifs (JWT requis)
+- `POST /api/goals` – Ajouter un objectif (JWT requis)
+- `PUT /api/goals/:id` – Modifier un objectif (JWT requis)
+- `DELETE /api/goals/:id` – Supprimer un objectif (JWT requis)
 
-## 📜 License
-LDS TOGO © 2025
+### Catégories
+
+- `GET /api/categories` – Liste des catégories
+- `POST /api/categories` – Ajouter une catégorie (JWT requis)
+
+### Statistiques
+
+- `GET /api/stats/transactions/stats/categories` – Statistiques par catégorie (JWT requis)
+- `GET /api/stats/transactions/stats/monthly` – Statistiques mensuelles (JWT requis)
+- `GET /api/stats/goals/compare` – Comparaison des objectifs (JWT requis)
+
+---
+
+## Sécurité
+
+- Authentification par **JWT** : toutes les routes sensibles nécessitent un token dans l’en-tête `Authorization: Bearer <token>`.
+- Les mots de passe sont hashés avec **bcryptjs**.
+- Les entrées sont validées côté serveur.
+
+---
+
+## Bonnes pratiques
+
+- **Ne jamais versionner le fichier `.env`** contenant vos secrets.
+- Utiliser des migrations pour toute modification de structure de la base.
+- Protéger les routes sensibles avec le middleware d’authentification.
+- Documenter toute nouvelle route ou fonctionnalité.
+
+---
+
+## Contribution
+
+1. Forkez le projet
+2. Créez une branche (`git checkout -b feature/ma-feature`)
+3. Commitez vos modifications (`git commit -am 'Ajout de ma feature'`)
+4. Poussez la branche (`git push origin feature/ma-feature`)
+5. Ouvrez une Pull Request
+
+---
+
+## Licence
+
+Ce projet est sous licence MIT.
+
+---
+
+## Contact
+
+Pour toute question ou suggestion, contactez l’équipe
