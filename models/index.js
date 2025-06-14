@@ -21,16 +21,16 @@ Category.hasMany(Goal);
 Goal.belongsTo(Category);
 
 // Synchronisation des modèles avec la base de données
-async function syncModels() {
-  try {
-    await sequelize.sync({ alter: true }); // ou { force: true } pour réinitialiser la BDD
-    console.log('✅ Modèles synchronisés avec succès');
-  } catch (error) {
-    console.error('❌ Erreur lors de la synchronisation des modèles :', error);
-  }
-}
+//async function syncModels() {
+  //try {
+    //await sequelize.sync({ alter: true }); // ou { force: true } pour réinitialiser la BDD
+    //console.log('✅ Modèles synchronisés avec succès');
+  //} catch (error) {
+    //console.error('❌ Erreur lors de la synchronisation des modèles :', error);
+  //}
+//}
 
-syncModels();
+//syncModels();
 
 // Exportation des modèles et de sequelize
 module.exports = {

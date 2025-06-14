@@ -80,6 +80,7 @@ const deleteGoal = async (req, res) => {
     await goal.destroy();
     res.json({ message: 'Goal removed' });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
 };
