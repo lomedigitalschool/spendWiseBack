@@ -1,31 +1,54 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
+const userRoutes = require('./routes/userRoutes');// 👈 
+
+
 dotenv.config();
 
 const userRoutes = require('./routes/userRoutes');
-const dashboardRoutes = require('./routes/dashboard'); 
-const { sequelize } = require('./Models'); 
+const dashboardRoutes = require('./routes/dashboard');
+const { sequelize } = require('./models');
 
 const app = express();
 
+// Middlewares globaux
 app.use(express.json());
-app.use(cors()) ;
+app.use(cors());
 
-app.use('/api/auth', userRoutes);
-app.use('/api', dashboardRoutes); 
+// Routes
+app.use('/api/users', userRoutes);
+app.use('/api', dashboardRoutes);
+app.use('api/auth', require('./routes/userRoutes'));
 
+// Middleware pour les routes non trouvées
+app.use((req, res, next) => {
+  res.status(404).json({ message: 'Route non trouvée' });
+});
+
+// Middleware global de gestion d'erreurs
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Une erreur est survenue' });
+});
+
+// Démarrage du serveur
 const PORT = process.env.PORT || 5000;
 
-// Synchronisation de la base de données et démarrer le serveur
-sequelize.sync({ alter: true })
+sequelize.authenticate()
   .then(() => {
-    console.log("Base de donnée synchronisée");
-    app.listen(PORT, () => console.log(`Server démarré sur le port ${PORT}`));
+    console.log('✅ Connexion à la base de données réussie');
+    return sequelize.sync({ alter: true }); // force: false par défaut
+  })
+  .then(() => {
+    console.log('✅ Base de données synchronisée');
+    app.listen(PORT, () => {
+      console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
+    });
   })
   .catch((err) => {
-
-    console.error("Erreur de synchronisation avec la base de données :", err);
-
+    console.error('❌ Erreur de synchronisation ou de connexion à la base de données :', err);
   });
 
+module.exports = app;

@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-  return sequelize.define('User', {
+  const User = sequelize.define('User', {
     name: {
       type: DataTypes.STRING,
       allowNull: false
@@ -12,8 +12,14 @@ module.exports = (sequelize, DataTypes) => {
     password: {
       type: DataTypes.STRING,
       allowNull: false
-    }
+    },
+    balance: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0.0
+    } 
+
   });
+  return User;
 };
 
 

@@ -1,6 +1,8 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/db');
+const sequelize = require('../config/database');
 
+
+module.exports = (sequelize, DataTypes) => {
 const Goal = sequelize.define('Goal', {
   id: {
     type: DataTypes.INTEGER,
@@ -20,5 +22,5 @@ const Goal = sequelize.define('Goal', {
     allowNull: false,
   }
 });
-
-module.exports = Goal;
+return Goal;
+} 

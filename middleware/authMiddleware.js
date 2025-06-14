@@ -4,21 +4,24 @@ require('dotenv').config();
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-  // Pour VérifieR si le header contient un token
+  // Vérifie que le header Authorization existe et commence par "Bearer"
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Accès non autorisé' });
+    return res.status(401).json({ message: 'Accès non autorisé. Aucun token fourni.' });
   }
 
   const token = authHeader.split(' ')[1];
 
   try {
+    // Vérification du token avec la clé secrète
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; 
-    next();
+    
+    // Ajoute les données de l'utilisateur décodées dans req.user
+    req.user = decoded;
+
+    next(); // Passage au contrôleur
   } catch (err) {
-    return res.status(403).json({ message: 'Token invalide' });
+    return res.status(403).json({ message: 'Token invalide ou expiré.' });
   }
 };
 
 module.exports = authMiddleware;
-
