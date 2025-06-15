@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
-const authMiddleware = require('../middleware/authMiddleware');
+const { protect } = require('../middleware/authMiddleware');
 
 // Routes pour l'authentification
-router.get('/profile', authMiddleware, authController.getUserProfile);
+router.get('/profile', protect, authController.getUserProfile);
 
 
 router.post('/register', authController.register);

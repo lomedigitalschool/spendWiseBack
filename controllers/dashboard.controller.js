@@ -1,9 +1,9 @@
 const { Op, fn, col } = require('sequelize');
 const moment = require('moment'); // npm install moment
-const User = require('../models/user');
-const Transaction = require('../models/transaction');
-const Goal = require('../models/goal');
-const Category = require('../models/category');
+const User = require('../models/user.model');
+const Transaction = require('../models/transaction.model');
+const Goal = require('../models/goal.model');
+const Category = require('../models/category.model');
 
 exports.getDashboard = async (req, res) => {
   try {

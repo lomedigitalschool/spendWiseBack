@@ -1,4 +1,7 @@
 // config/config.js
+require('dotenv').config();
+// This file exports the database configuration for different environments
+// It uses environment variables to set the configuration values
 
 module.exports = {
   development: {
