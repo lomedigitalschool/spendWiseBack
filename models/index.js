@@ -8,31 +8,56 @@ const Transaction = require('./transaction.model')(sequelize, DataTypes);
 const Goal = require('./goal.model')(sequelize, DataTypes);
 
 // Associations
-User.hasMany(Transaction);
-Transaction.belongsTo(User);
 
-User.hasMany(Goal);
-Goal.belongsTo(User);
+// Un utilisateur a plusieurs transactions
+User.hasMany(Transaction, {
+  foreignKey: {
+    name: 'UserId',
+    allowNull: false
+  },
+  onDelete: 'CASCADE'
+});
+Transaction.belongsTo(User, {
+  foreignKey: 'UserId'
+});
 
-Category.hasMany(Transaction);
-Transaction.belongsTo(Category);
+// Un utilisateur a plusieurs objectifs
+User.hasMany(Goal, {
+  foreignKey: {
+    name: 'UserId',
+    allowNull: false
+  },
+  onDelete: 'CASCADE'
+});
+Goal.belongsTo(User, {
+  foreignKey: 'UserId'
+});
 
-Category.hasMany(Goal);
-Goal.belongsTo(Category);
+// Une catégorie a plusieurs transactions
+Category.hasMany(Transaction, {
+  foreignKey: {
+    name: 'CategoryId',
+    allowNull: false
+  },
+  onDelete: 'SET NULL'
+});
+Transaction.belongsTo(Category, {
+  foreignKey: 'CategoryId'
+});
 
-// Synchronisation des modèles avec la base de données
-//async function syncModels() {
-  //try {
-    //await sequelize.sync({ alter: true }); // ou { force: true } pour réinitialiser la BDD
-    //console.log('✅ Modèles synchronisés avec succès');
-  //} catch (error) {
-    //console.error('❌ Erreur lors de la synchronisation des modèles :', error);
-  //}
-//}
+// Une catégorie a plusieurs objectifs
+Category.hasMany(Goal, {
+  foreignKey: {
+    name: 'CategoryId',
+    allowNull: false
+  },
+  onDelete: 'SET NULL'
+});
+Goal.belongsTo(Category, {
+  foreignKey: 'CategoryId'
+});
 
-//syncModels();
-
-// Exportation des modèles et de sequelize
+// Exportation
 module.exports = {
   sequelize,
   Sequelize,

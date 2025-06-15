@@ -3,13 +3,23 @@ module.exports = (sequelize, DataTypes) => {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
-      autoIncrement: true,
+      autoIncrement: true
     },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
-    },
+      unique: {
+        msg: 'Cette catégorie existe déjà.'
+      },
+      validate: {
+        notEmpty: { msg: 'Le nom de la catégorie est requis.' },
+        len: { args: [2, 50], msg: 'Le nom de la catégorie doit contenir entre 2 et 50 caractères.' }
+      }
+    }
+  }, {
+    tableName: 'Categories',
+    timestamps: true,
+    underscored: true
   });
 
   return Category;

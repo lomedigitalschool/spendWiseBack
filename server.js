@@ -8,6 +8,7 @@ const transactionRoutes = require('./routes/transactionRoutes');
 const goalRoutes = require('./routes/goalRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const statsRoutes = require('./routes/statsRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use('/api/goals', goalRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api', statsRoutes); // pour /transactions/stats/* et /goals/compare
 app.use('/api/stats', require('./routes/statsRoutes'));
+app.use('/api/dashboard', dashboardRoutes); // ✅ /dashboard
 
 
 // Route de test

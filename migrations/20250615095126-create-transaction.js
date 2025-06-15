@@ -2,24 +2,29 @@
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Goals', {
+    await queryInterface.createTable('Transactions', {
       id: {
-        type: Sequelize.INTEGER,
+        allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false,
+        type: Sequelize.INTEGER,
       },
-      targetAmount: {
+      amount: {
         type: Sequelize.FLOAT,
         allowNull: false,
       },
-      currentAmount: {
-        type: Sequelize.FLOAT,
-        defaultValue: 0,
-      },
-      frequency: {
-        type: Sequelize.ENUM('daily', 'weekly', 'monthly', 'yearly'),
+      type: {
+        type: Sequelize.ENUM('income', 'expense'),
         allowNull: false,
+      },
+      description: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      date: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.fn('NOW'),
       },
       userId: {
         type: Sequelize.INTEGER,
@@ -52,7 +57,7 @@ module.exports = {
     });
   },
 
-  async down(queryInterface) {
-    await queryInterface.dropTable('Goals');
-  },
+  async down(queryInterface, Sequelize) {
+    await queryInterface.dropTable('Transactions');
+  }
 };

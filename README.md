@@ -16,6 +16,7 @@ Ce backend est développé en **Node.js** avec **Express** et utilise **PostgreS
 - [Configuration](#configuration)
 - [Lancement du serveur](#lancement-du-serveur)
 - [Principales routes de l’API](#principales-routes-de-lapi)
+- [Tests avec Postman](#tests-avec-postman)
 - [Sécurité](#sécurité)
 - [Bonnes pratiques](#bonnes-pratiques)
 - [Contribution](#contribution)
@@ -121,36 +122,54 @@ Le serveur démarre par défaut sur le port `5000` (modifiable dans `.env`).
 
 ## Principales routes de l’API
 
+Voir la [documentation API complète](./API_DOCUMENTATION.md) pour le détail de chaque endpoint.
+
+---
+
+## Tests avec Postman
+
+1. Télécharge le fichier `SpendWiseBack.postman_collection.json` fourni.
+2. Ouvre Postman, clique sur `Importer` et sélectionne ce fichier.
+3. Renseigne la variable `{{token}}` avec le JWT obtenu après le login pour tester les routes protégées.
+
+
 ### Authentification & Utilisateur
 
-- `POST /api/users/register` – Inscription
-- `POST /api/users/login` – Connexion
-- `GET /api/users/profile` – Infos utilisateur connecté (JWT requis)
+- POST /api/users/register – Inscription
+- POST /api/users/login – Connexion
+- GET /api/users/profile – Infos utilisateur connecté (JWT requis)
+
+
+-GET /api/dashbord - Données utilisateur;Solde de l’utilisateur;Somme des dépenses  expense du mois courant
+Somme des revenus income du mois courant
+5 dernières transactions
+Objectifs de l’utilisateur avec currentAmount / targetAmount
+Somme dépensée par catégorie ce mois-ci
 
 ### Transactions
 
-- `GET /api/transactions` – Liste des transactions de l’utilisateur (JWT requis)
-- `POST /api/transactions` – Ajouter une transaction (JWT requis)
-- `DELETE /api/transactions/:id` – Supprimer une transaction (JWT requis)
-- `GET /api/transactions/transactions` – Lister toutes les transactions (JWT requis, usage admin/debug)
+- GET /api/transactions – Liste des transactions de l’utilisateur (JWT requis)
+- POST /api/transactions – Ajouter une transaction (JWT requis)
+- DELETE /api/transactions/:id – Supprimer une transaction (JWT requis)
+- GET /api/transactions/transactions – Lister toutes les transactions (JWT requis, usage admin/debug)
 
 ### Objectifs (Goals)
 
-- `GET /api/goals` – Liste des objectifs (JWT requis)
-- `POST /api/goals` – Ajouter un objectif (JWT requis)
-- `PUT /api/goals/:id` – Modifier un objectif (JWT requis)
-- `DELETE /api/goals/:id` – Supprimer un objectif (JWT requis)
+- GET /api/goals – Liste des objectifs (JWT requis)
+- POST /api/goals – Ajouter un objectif (JWT requis)
+- PUT /api/goals/:id – Modifier un objectif (JWT requis)
+- DELETE /api/goals/:id – Supprimer un objectif (JWT requis)
 
 ### Catégories
 
-- `GET /api/categories` – Liste des catégories
-- `POST /api/categories` – Ajouter une catégorie (JWT requis)
+- GET /api/categories – Liste des catégories
+- POST /api/categories – Ajouter une catégorie (JWT requis)
 
 ### Statistiques
 
-- `GET /api/stats/transactions/stats/categories` – Statistiques par catégorie (JWT requis)
-- `GET /api/stats/transactions/stats/monthly` – Statistiques mensuelles (JWT requis)
-- `GET /api/stats/goals/compare` – Comparaison des objectifs (JWT requis)
+- GET /api/stats/transactions/stats/categories – Statistiques par catégorie (JWT requis)
+- GET /api/stats/transactions/stats/monthly – Statistiques mensuelles (JWT requis)
+- GET /api/stats/goals/compare – Comparaison des objectifs (JWT requis)
 
 ---
 
@@ -189,4 +208,4 @@ Ce projet est sous licence MIT.
 
 ## Contact
 
-Pour toute question ou suggestion, contactez l’équipe
+Pour toute question ou suggestion, contactez l’équipe via [GitHub Issues](https://github.com/lomedigitalschool/spendWiseBack/issues).

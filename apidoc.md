@@ -46,9 +46,16 @@ Toutes les routes protégées nécessitent un token JWT dans l’en-tête :
 
 ---
 
+### 4. dashboard
+
+**GET** `/api/dashboard`  
+**Headers :** `Authorization: Bearer <token>`
+
+---
+
 ## Transactions
 
-### 4. Créer une transaction
+### 5. Créer une transaction
 
 **POST** `/api/transactions`  
 **Headers :** `Authorization: Bearer <token>`  
@@ -65,21 +72,21 @@ Toutes les routes protégées nécessitent un token JWT dans l’en-tête :
 
 ---
 
-### 5. Lister les transactions de l'utilisateur
+### 6. Lister les transactions de l'utilisateur
 
 **GET** `/api/transactions`  
 **Headers :** `Authorization: Bearer <token>`
 
 ---
 
-### 6. Supprimer une transaction
+### 7. Supprimer une transaction
 
 **DELETE** `/api/transactions/:id`  
 **Headers :** `Authorization: Bearer <token>`
 
 ---
 
-### 7. Lister toutes les transactions (admin ou debug)
+### 8. Lister toutes les transactions (admin ou debug)
 
 **GET** `/api/transactions/transactions`  
 **Headers :** `Authorization: Bearer <token>`
@@ -88,7 +95,7 @@ Toutes les routes protégées nécessitent un token JWT dans l’en-tête :
 
 ## Objectifs (Goals)
 
-### 8. Créer un objectif
+### 9. Créer un objectif
 
 **POST** `/api/goals`  
 **Headers :** `Authorization: Bearer <token>`  
@@ -102,14 +109,14 @@ Toutes les routes protégées nécessitent un token JWT dans l’en-tête :
 
 ---
 
-### 9. Lister les objectifs
+### 10. Lister les objectifs
 
 **GET** `/api/goals`  
 **Headers :** `Authorization: Bearer <token>`
 
 ---
 
-### 10. Modifier un objectif
+### 11. Modifier un objectif
 
 **PUT** `/api/goals/:id`  
 **Headers :** `Authorization: Bearer <token>`  
@@ -123,7 +130,7 @@ Toutes les routes protégées nécessitent un token JWT dans l’en-tête :
 
 ---
 
-### 11. Supprimer un objectif
+### 12. Supprimer un objectif
 
 **DELETE** `/api/goals/:id`  
 **Headers :** `Authorization: Bearer <token>`
@@ -132,7 +139,7 @@ Toutes les routes protégées nécessitent un token JWT dans l’en-tête :
 
 ## Catégories
 
-### 12. Créer une catégorie
+### 13. Créer une catégorie
 
 **POST** `/api/categories`  
 **Headers :** `Authorization: Bearer <token>`  
@@ -145,7 +152,7 @@ Toutes les routes protégées nécessitent un token JWT dans l’en-tête :
 
 ---
 
-### 13. Lister les catégories
+### 14. Lister les catégories
 
 **GET** `/api/categories`
 
@@ -153,21 +160,21 @@ Toutes les routes protégées nécessitent un token JWT dans l’en-tête :
 
 ## Statistiques
 
-### 14. Statistiques par catégorie
+### 15. Statistiques par catégorie
 
 **GET** `/api/stats/transactions/stats/categories`  
 **Headers :** `Authorization: Bearer <token>`
 
 ---
 
-### 15. Statistiques mensuelles
+### 16. Statistiques mensuelles
 
 **GET** `/api/stats/transactions/stats/monthly`  
 **Headers :** `Authorization: Bearer <token>`
 
 ---
 
-### 16. Comparaison des objectifs
+### 17. Comparaison des objectifs
 
 **GET** `/api/stats/goals/compare`  
 **Headers :** `Authorization: Bearer <token>`
@@ -180,7 +187,9 @@ Toutes les routes protégées nécessitent un token JWT dans l’en-tête :
 |---------|-----------------------------------------------|------------------|------------------------------------|
 | POST    | /api/users/register                           | Non              | Inscription utilisateur            |
 | POST    | /api/users/login                              | Non              | Connexion utilisateur              |
-| GET     | /api/users/profile                            | Oui              | Profil utilisateur                 |
+| GET     | /api/users/profile                            | Oui              | Profil utilisateur 
+|GET      | /api/dashboard         |                      |Oui               | View  
+utilisateur Dashboard
 | POST    | /api/transactions                             | Oui              | Créer une transaction              |
 | GET     | /api/transactions                             | Oui              | Lister transactions utilisateur    |
 | DELETE  | /api/transactions/:id                         | Oui              | Supprimer une transaction          |

@@ -1,26 +1,33 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
-
-
 module.exports = (sequelize, DataTypes) => {
-const Goal = sequelize.define('Goal', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-  },
-  targetAmount: {
-    type: DataTypes.FLOAT,
-    allowNull: false,
-  },
-  currentAmount: {
-    type: DataTypes.FLOAT,
-    defaultValue: 0,
-  },
-  frequency: {
-    type: DataTypes.ENUM('daily', 'weekly', 'monthly', 'yearly'),
-    allowNull: false,
-  }
-});
-return Goal;
-} 
+  const Goal = sequelize.define('Goal', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    targetAmount: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      validate: {
+        min: 0.01,
+      },
+    },
+    currentAmount: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0,
+      validate: {
+        min: 0,
+      },
+    },
+    frequency: {
+      type: DataTypes.ENUM('daily', 'weekly', 'monthly', 'yearly'),
+      allowNull: false,
+    },
+    // Champs automatiques créés par Sequelize : createdAt, updatedAt
+  }, {
+    tableName: 'Goals', // Nom explicite si nécessaire
+    timestamps: true,   // createdAt, updatedAt activés par défaut
+  });
+
+  return Goal;
+};
