@@ -4,6 +4,8 @@ const User = require('../models/user.model');
 const Transaction = require('../models/transaction.model');
 const Goal = require('../models/goal.model');
 const Category = require('../models/category.model');
+const { User, Transaction, Goal, Category } = require('../models');
+
 
 exports.getDashboard = async (req, res) => {
   try {
@@ -64,7 +66,7 @@ exports.getDashboard = async (req, res) => {
     });
 
     res.json({
-      message: 'Bienvenue sur votre tableau de bord, ' + user.name + '!',
+      message: user ? `Bienvenue sur votre tableau de bord, ${user.name} !` : "Bienvenue sur votre tableau de bord !",
       user,
       balance: user.balance,
       totalExpensesThisMonth: totalExpensesThisMonth || 0,

@@ -31,6 +31,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATEONLY,
       allowNull: false,
       defaultValue: DataTypes.NOW
+    },
+    UserId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    CategoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     }
   }, {
     tableName: 'Transactions',

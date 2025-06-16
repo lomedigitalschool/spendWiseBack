@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { sequelize } = require('./models');
+require('dotenv').config();
+
 
 const userRoutes = require('./routes/userRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
@@ -25,7 +27,7 @@ app.use('/api/goals', goalRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api', statsRoutes); // pour /transactions/stats/* et /goals/compare
 app.use('/api/stats', require('./routes/statsRoutes'));
-app.use('/api/dashboard', dashboardRoutes); // ✅ /dashboard
+app.use('/api', dashboardRoutes); // ✅ /dashboard
 
 
 // Route de test

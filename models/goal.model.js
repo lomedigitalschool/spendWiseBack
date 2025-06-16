@@ -23,10 +23,18 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('daily', 'weekly', 'monthly', 'yearly'),
       allowNull: false,
     },
-    // Champs automatiques créés par Sequelize : createdAt, updatedAt
+    UserId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    CategoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    }
   }, {
-    tableName: 'Goals', // Nom explicite si nécessaire
-    timestamps: true,   // createdAt, updatedAt activés par défaut
+    tableName: 'Goals',
+    timestamps: true,
+    underscored: true
   });
 
   return Goal;

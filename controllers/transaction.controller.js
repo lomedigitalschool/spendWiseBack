@@ -91,7 +91,7 @@ const addTransaction = async (req, res) => {
     return res.status(400).json({ message: 'amount et type sont obligatoires.' });
   }
 
-  const { amount, type, description, date, CategoryId } = req.body;
+  const { amount, type, description, date, categoryId } = req.body;
 
   try {
     const transaction = await Transaction.create({
@@ -99,8 +99,8 @@ const addTransaction = async (req, res) => {
       type,
       date: date ? new Date(date) : new Date(),
       description,
-      CategoryId,
-      UserId: req.user.id
+      CategoryId: categoryId,
+      UserId: req.user.id,
     });
 
     const user = await User.findByPk(req.user.id);

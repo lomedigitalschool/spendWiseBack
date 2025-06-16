@@ -37,7 +37,7 @@ Goal.belongsTo(User, {
 Category.hasMany(Transaction, {
   foreignKey: {
     name: 'CategoryId',
-    allowNull: false
+    allowNull: true   // ✅ cohérent avec SET NULL
   },
   onDelete: 'SET NULL'
 });
@@ -49,7 +49,7 @@ Transaction.belongsTo(Category, {
 Category.hasMany(Goal, {
   foreignKey: {
     name: 'CategoryId',
-    allowNull: false
+    allowNull: true   // ✅ cohérent avec SET NULL
   },
   onDelete: 'SET NULL'
 });
