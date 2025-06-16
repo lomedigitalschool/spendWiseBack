@@ -29,6 +29,7 @@ module.exports = {
       userId: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        field: 'user_id',
         references: {
           model: 'Users',
           key: 'id'
@@ -38,6 +39,7 @@ module.exports = {
       categoryId: {
         type: Sequelize.INTEGER,
         allowNull: false,
+        field: 'category_id',
         references: {
           model: 'Categories',
           key: 'id'

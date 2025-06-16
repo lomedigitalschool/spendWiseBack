@@ -1,11 +1,7 @@
 const { Op, fn, col } = require('sequelize');
 const moment = require('moment'); // npm install moment
-const User = require('../models/user.model');
-const Transaction = require('../models/transaction.model');
-const Goal = require('../models/goal.model');
-const Category = require('../models/category.model');
-const { User, Transaction, Goal, Category } = require('../models');
 
+const { User, Transaction, Goal, Category } = require('../models');
 
 exports.getDashboard = async (req, res) => {
   try {
@@ -19,18 +15,19 @@ exports.getDashboard = async (req, res) => {
       attributes: ['id', 'name', 'email', 'balance']
     });
 
-    // ✅ Dépenses et revenus du mois en cours
+    // ✅ Dépenses du mois en cours
     const totalExpensesThisMonth = await Transaction.sum('amount', {
       where: {
-        userId,
+        UserId: userId, // corrigé
         type: 'expense',
         date: { [Op.between]: [startOfMonth, endOfMonth] }
       }
     });
 
+    // ✅ Revenus du mois en cours
     const totalIncomeThisMonth = await Transaction.sum('amount', {
       where: {
-        userId,
+        UserId: userId, // corrigé
         type: 'income',
         date: { [Op.between]: [startOfMonth, endOfMonth] }
       }
@@ -38,31 +35,31 @@ exports.getDashboard = async (req, res) => {
 
     // ✅ 5 dernières transactions
     const recentTransactions = await Transaction.findAll({
-      where: { userId },
+      where: { UserId: userId }, // corrigé
       order: [['date', 'DESC']],
       limit: 5,
       include: [{ model: Category, attributes: ['name'] }]
     });
 
-    // ✅ Objectifs
+    // ✅ Objectifs actifs
     const goals = await Goal.findAll({
-      where: { userId },
+      where: { UserId: userId }, // corrigé
       include: [{ model: Category, attributes: ['name'] }]
     });
 
     // ✅ Résumé par catégorie (sommes)
     const categorySummary = await Transaction.findAll({
       where: {
-        userId,
+        UserId: userId, // corrigé
         type: 'expense',
         date: { [Op.between]: [startOfMonth, endOfMonth] }
       },
       attributes: [
-        'categoryId',
+        'CategoryId', // corrigé
         [fn('SUM', col('amount')), 'total']
       ],
       include: [{ model: Category, attributes: ['name'] }],
-      group: ['categoryId', 'Category.id']
+      group: ['CategoryId', 'Category.id'] // corrigé
     });
 
     res.json({

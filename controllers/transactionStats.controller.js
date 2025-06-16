@@ -1,4 +1,4 @@
-const { Transaction, Category, Goal } = require('../models');
+const { Transaction, Category } = require('../models');
 const { Op } = require('sequelize');
 const sequelize = require('sequelize');
 
@@ -8,22 +8,28 @@ exports.getCategoryStats = async (req, res) => {
     const stats = await Transaction.findAll({
       where: { UserId: req.user.id },
       attributes: [
-        [sequelize.fn('SUM', sequelize.literal('CASE WHEN type = "income" THEN amount ELSE 0 END')), 'income'],
-        [sequelize.fn('SUM', sequelize.literal('CASE WHEN type = "expense" THEN amount ELSE 0 END')), 'expense'],
+        [
+          sequelize.literal(`SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END)`),
+          'income'
+        ],
+        [
+          sequelize.literal(`SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END)`),
+          'expense'
+        ],
         'CategoryId'
       ],
       include: { 
         model: Category, 
         attributes: ['name', 'id'] 
       },
-      group: ['CategoryId']
+      group: ['CategoryId', 'Category.id']
     });
 
     const formattedStats = stats.map(item => ({
       category: item.Category.name,
       categoryId: item.Category.id,
-      income: parseFloat(item.income) || 0,
-      expense: parseFloat(item.expense) || 0
+      income: parseFloat(item.get('income')) || 0,
+      expense: parseFloat(item.get('expense')) || 0
     }));
 
     res.json(formattedStats);
@@ -45,16 +51,32 @@ exports.getMonthlyStats = async (req, res) => {
         }
       },
       attributes: [
-        [sequelize.fn('DATE_FORMAT', sequelize.col('date'), '%Y-%m'), 'month'],
-        [sequelize.fn('SUM', sequelize.literal('CASE WHEN type = "income" THEN amount ELSE 0 END')), 'income'],
-        [sequelize.fn('SUM', sequelize.literal('CASE WHEN type = "expense" THEN amount ELSE 0 END')), 'expense']
+        [
+          sequelize.literal(`TO_CHAR(date, 'YYYY-MM')`),
+          'month'
+        ],
+        [
+          sequelize.literal(`SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END)`),
+          'income'
+        ],
+        [
+          sequelize.literal(`SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END)`),
+          'expense'
+        ]
       ],
-      group: ['month'],
-      order: ['month']
+      group: [sequelize.literal(`TO_CHAR(date, 'YYYY-MM')`)],
+      order: [sequelize.literal(`TO_CHAR(date, 'YYYY-MM')`)]
     });
 
-    res.json(stats);
+    const formattedStats = stats.map(item => ({
+      month: item.get('month'),
+      income: parseFloat(item.get('income')) || 0,
+      expense: parseFloat(item.get('expense')) || 0
+    }));
+
+    res.json(formattedStats);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error fetching monthly stats:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

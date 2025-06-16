@@ -34,11 +34,22 @@ module.exports = (sequelize, DataTypes) => {
     },
     UserId: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
+      field: 'user_id',
+      references: {
+        model: 'Users',
+        key: 'id'
+      },
+      onDelete: 'CASCADE',
     },
     CategoryId: {
       type: DataTypes.INTEGER,
-      allowNull: false
+      allowNull: false,
+      field: 'category_id',
+      references: {
+        model: 'Categories',
+        key: 'id'
+      },
     }
   }, {
     tableName: 'Transactions',

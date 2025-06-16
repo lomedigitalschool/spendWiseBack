@@ -48,7 +48,8 @@ exports.getGoalProgress = async (req, res) => {
     }));
 
     res.json(progress);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (error ) {
+    console.error('Error fetching goal progress:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

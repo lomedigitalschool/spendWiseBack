@@ -21,7 +21,7 @@ const getGoals = async (req, res) => {
 // @route   POST /api/goals
 // @access  Private
 const addGoal = async (req, res) => {
-  const { targetAmount, frequency, deadline, CategoryId } = req.body;
+  const { targetAmount, frequency, CategoryId } = req.body;
 
   try {
     const goal = await Goal.create({
@@ -33,7 +33,8 @@ const addGoal = async (req, res) => {
 
     res.status(201).json(goal);
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Goal creation failed:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 

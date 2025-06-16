@@ -9,7 +9,7 @@ const Goal = require('./goal.model')(sequelize, DataTypes);
 
 // Associations
 
-// Un utilisateur a plusieurs transactions
+// 🔗 User -> Transaction
 User.hasMany(Transaction, {
   foreignKey: {
     name: 'UserId',
@@ -18,10 +18,13 @@ User.hasMany(Transaction, {
   onDelete: 'CASCADE'
 });
 Transaction.belongsTo(User, {
-  foreignKey: 'UserId'
+  foreignKey: {
+    name: 'UserId',
+    allowNull: false
+  }
 });
 
-// Un utilisateur a plusieurs objectifs
+// 🔗 User -> Goal
 User.hasMany(Goal, {
   foreignKey: {
     name: 'UserId',
@@ -30,31 +33,40 @@ User.hasMany(Goal, {
   onDelete: 'CASCADE'
 });
 Goal.belongsTo(User, {
-  foreignKey: 'UserId'
+  foreignKey: {
+    name: 'UserId',
+    allowNull: false
+  }
 });
 
-// Une catégorie a plusieurs transactions
+// 🔗 Category -> Transaction
 Category.hasMany(Transaction, {
   foreignKey: {
     name: 'CategoryId',
-    allowNull: true   // ✅ cohérent avec SET NULL
+    allowNull: true // SET NULL autorisé
   },
   onDelete: 'SET NULL'
 });
 Transaction.belongsTo(Category, {
-  foreignKey: 'CategoryId'
+  foreignKey: {
+    name: 'CategoryId',
+    allowNull: true
+  }
 });
 
-// Une catégorie a plusieurs objectifs
+// 🔗 Category -> Goal
 Category.hasMany(Goal, {
   foreignKey: {
     name: 'CategoryId',
-    allowNull: true   // ✅ cohérent avec SET NULL
+    allowNull: true // SET NULL autorisé
   },
   onDelete: 'SET NULL'
 });
 Goal.belongsTo(Category, {
-  foreignKey: 'CategoryId'
+  foreignKey: {
+    name: 'CategoryId',
+    allowNull: true
+  }
 });
 
 // Exportation

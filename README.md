@@ -151,7 +151,7 @@ Somme dépensée par catégorie ce mois-ci
 - GET /api/transactions – Liste des transactions de l’utilisateur (JWT requis)
 - POST /api/transactions – Ajouter une transaction (JWT requis)
 - DELETE /api/transactions/:id – Supprimer une transaction (JWT requis)
-- GET /api/transactions/transactions – Lister toutes les transactions (JWT requis, usage admin/debug)
+- GET /api/transactions/all – Lister toutes les transactions (JWT requis, usage admin/debug)
 
 ### Objectifs (Goals)
 
@@ -205,6 +205,11 @@ Somme dépensée par catégorie ce mois-ci
 Ce projet est sous licence MIT.
 
 ---
+
+## 👥 Contributeurs
+
+- Sewanou Samson Edorh-Tossa (samwin25)
+- Sylvie ADONSOU (Sylvieads)
 
 ## Contact
 
