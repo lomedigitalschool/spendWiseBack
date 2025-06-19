@@ -41,14 +41,14 @@ exports.getCategoryStats = async (req, res) => {
 // 2. Stats mensuelles (courbe)
 exports.getMonthlyStats = async (req, res) => {
   try {
-    const { year = new Date().getFullYear() } = req.query;
+    const { year = new Date().getFullYear() } = req.query; // Récupère l'année depuis les paramètres de la requête, sinon utilise l'année actuelle
 
     const stats = await Transaction.findAll({
       where: { 
         UserId: req.user.id,
         date: { 
           [Op.between]: [`${year}-01-01`, `${year}-12-31`] 
-        }
+        } // Filtre pour l'année spécifiée
       },
       attributes: [
         [
@@ -62,21 +62,21 @@ exports.getMonthlyStats = async (req, res) => {
         [
           sequelize.literal(`SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END)`),
           'expense'
-        ]
+        ] 
       ],
       group: [sequelize.literal(`TO_CHAR(date, 'YYYY-MM')`)],
       order: [sequelize.literal(`TO_CHAR(date, 'YYYY-MM')`)]
-    });
+    }); // TO_CHAR(date, 'YYYY-MM') permet de formater la date en 'YYYY-MM'
 
     const formattedStats = stats.map(item => ({
       month: item.get('month'),
       income: parseFloat(item.get('income')) || 0,
       expense: parseFloat(item.get('expense')) || 0
-    }));
+    })); // Formate les statistiques mensuelles
 
-    res.json(formattedStats);
+    res.json(formattedStats); // Renvoie les statistiques mensuelles formatées
   } catch (error) {
     console.error('Error fetching monthly stats:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message }); 
   }
 };
