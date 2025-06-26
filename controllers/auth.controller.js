@@ -124,7 +124,7 @@ const passwordResetRequestController = async (req, res) => {
     from: process.env.EMAIL_USER,
     to: email,
     subject: "Reinitialisation du mot de passe",
-    html: `<p> cliquez sur ce lien </p> <a style="display:bloc; width: 15px ; height : 8px; padding: 5px 8px; background-color=oklch(35.9% 0.144 278.697); border-radius:5px" href="${link}">Pour reinitialiser votre mot de passe</a>`,
+    html: `<p> cliquez sur ce lien 👇 </p> <a style="display:bloc; width: 15px ; height : 8px; padding: 5px 8px; background-color=oklch(35.9% 0.144 278.697); border-radius:5px" href="${link}">Pour reinitialiser votre mot de passe</a>`,
   };
 
   try {
