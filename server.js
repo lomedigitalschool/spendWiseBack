@@ -2,16 +2,17 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const { sequelize } = require('./models');
-const initializeDefaultCategories = require('./utils/initializeDefaultCategories');
+//const initializeDefaultCategories = require('./utils/initializeDefaultCategories');
 require('dotenv').config();
 
 // Import des routes
 const userRoutes = require('./routes/userRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
-const goalRoutes = require('./routes/goalRoutes');
+//const goalRoutes = require('./routes/goalRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
-const statsRoutes = require('./routes/statsRoutes');
-const dashboardRoutes = require('./routes/dashboardRoutes');
+//const statsRoutes = require('./routes/statsRoutes');
+//const dashboardRoutes = require('./routes/dashboardRoutes');
+
 
 dotenv.config();
 
@@ -24,11 +25,13 @@ app.use(cors());
 // Routes
 app.use('/api/users', userRoutes); // ✅ auth/register, auth/login, auth/profile
 app.use('/api/transactions', transactionRoutes);
-app.use('/api/goals', goalRoutes);
+//app.use('/api/goals', goalRoutes);
 app.use('/api/categories', categoryRoutes);
-app.use('/api', statsRoutes); // pour /transactions/stats/* et /goals/compare
-app.use('/api/stats', require('./routes/statsRoutes'));
-app.use('/api', dashboardRoutes); // ✅ /dashboard
+//app.use('/api', statsRoutes); // pour /transactions/stats/* et /goals/compare
+//app.use('/api/stats', require('./routes/statsRoutes'));
+//app.use('/api', dashboardRoutes); // ✅ /dashboard
+
+
 
 // Route de test
 app.get('/', (req, res) => res.send('✅ API Budget App opérationnelle'));
@@ -56,7 +59,7 @@ sequelize.authenticate()
     console.log('✅ Base de données synchronisée');
 
     // Injection des catégories par défaut si manquantes
-    await initializeDefaultCategories();
+    //await initializeDefaultCategories();
 
     app.listen(PORT, () => {
       console.log(`🚀 Serveur démarré sur http://localhost:${PORT}`);
