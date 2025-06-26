@@ -110,7 +110,7 @@ const passwordResetRequestController = async (req, res) => {
   }
   //generation d'un token  et d'un temps d'expirartion
   const token = tokenGenerator;
-  const expiriration = Date.now() + 30 * 60 * 1000; // Expire dans 15 min
+  const expiration = Date.now() + 30 * 60 * 1000; // Expire dans 15 min
   const link = `/api/users/reset-password?token=${token}`;
 
   const sender = nodemailer.createTransport({
@@ -130,7 +130,7 @@ const passwordResetRequestController = async (req, res) => {
   try {
     await sender.sendMail(mailOptions);
     res.status(200).json({ message: "Email envoyé avec succès !", token });
-    tokenDB.set(token, { email, expiriration });
+    tokenDB.set(token, { email, expiration });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Erreur lors de l'envoi de l'email" });
