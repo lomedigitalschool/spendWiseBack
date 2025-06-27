@@ -57,3 +57,5 @@ module.exports = {
   register,
   generateToken
 };
+
+

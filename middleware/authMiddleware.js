@@ -34,10 +34,10 @@ const authMiddleware =  async (req, res, next) => {
     // Si le token est invalide ou expiré
     return res.status(403).json({ message: 'Token invalide ou expiré.' });
 
-    
-
   }
 };
 
 module.exports = { protect: authMiddleware };
+
+
 
