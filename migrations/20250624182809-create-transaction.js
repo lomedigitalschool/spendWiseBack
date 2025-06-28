@@ -29,4 +29,3 @@ module.exports = {
     await queryInterface.sequelize.query(`DROP TYPE "enum_Transactions_type"`);
   }
 };
-

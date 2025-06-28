@@ -34,4 +34,3 @@ module.exports = {
     await queryInterface.dropTable('Budgets');
   }
 };
-
