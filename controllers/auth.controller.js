@@ -98,5 +98,6 @@ const getUserProfile = async (req, res) => {
 module.exports = {
   register,
   login,
+  getUserProfile,
   generateToken
 };
