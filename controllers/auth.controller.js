@@ -5,7 +5,7 @@ require('dotenv').config();
 
 // 🔐 Fonction pour générer un token JWT
 const generateToken = (user) => {
-  return jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
 // ✅ ENREGISTREMENT (REGISTER)
@@ -49,11 +49,54 @@ const register = async (req, res) => {
   }
 };
 
+//✅ CONNEXION (LOGIN)
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
+    const user = await User.findOne({ where: { email } });
+    if (!user) return res.status(400).json({ message: 'Email ou mot de passe incorrect.' });
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Email ou mot de passe incorrect.' });
+    
+    const token = generateToken(user); // Utilise ta fonction définie
 
+    return res.status(200).json({
+      message: 'Connexion réussie',
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        balance: user.balance
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
+
+// GET USER PROFILE
+const getUserProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const user = await User.findByPk(userId, {
+      attributes: ['id', 'name', 'email', 'balance']
+    });
+    
+    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé.' });
+
+    return res.status(200).json({ user });
+    } catch (error) {
+      return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    }
+  };
 
 // ✅ Exportation
 module.exports = {
   register,
+  login,
   generateToken
 };
