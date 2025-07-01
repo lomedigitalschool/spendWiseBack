@@ -24,23 +24,31 @@ const getCategories = async (req, res) => {
 const addCategory = async (req, res) => {
   const { name } = req.body;
 
+  // Validation de l’entrée utilisateur
+  if (!name || name.trim() === '') {
+    return res.status(400).json({ message: 'Le nom de la catégorie est requis.' });
+  }
+
   try {
     const [category, created] = await Category.findOrCreate({ 
-      where: { name },
-      defaults: { name }
+      where: { name: name.trim() },
+      defaults: { name: name.trim() }
     });
 
     if (!created) {
-      return res.status(400).json({ message: 'Category already exists' });
+      return res.status(200).json({ 
+        message: 'Cette catégorie existe déjà.',
+        category: { id: category.id, name: category.name }
+      });
     }
 
     res.status(201).json({ 
-      message: 'Category added',
+      message: 'Catégorie créée avec succès.',
       category: { id: category.id, name: category.name }
     });
   } catch (error) {
     res.status(500).json({ 
-      message: 'Server error',
+      message: 'Erreur serveur.',
       error: process.env.NODE_ENV === 'development' ? error.message : null
     });
   }

@@ -104,11 +104,6 @@ Ce backend est développé en **Node.js** avec **Express** et utilise **PostgreS
    npx sequelize-cli db:migrate
    ```
 
-4. **(Optionnel) Lancer les seeders**
-   ```sh
-   npx sequelize-cli db:seed:all
-   ```
-
 ---
 
 ## Lancement du serveur

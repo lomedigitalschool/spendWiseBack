@@ -6,16 +6,9 @@ const { Op } = require('sequelize');
 // @access  Private
 const getTransactions = async (req, res) => {
   try {
-    const { 
-      startDate, 
-      endDate, 
-      categoryId,
-      type, // 'income' ou 'expense' (optionnel)
-      page = 1, 
-      limit = 10 
-    } = req.query;
+    const { startDate, endDate, categoryId, type, page = 1, limit = 10 } = req.query;
 
-    const where = { 
+    const where = {
       UserId: req.user.id,
       ...(type && { type }),
       ...(categoryId && { CategoryId: categoryId }),
@@ -57,7 +50,7 @@ const getTransactions = async (req, res) => {
 
   } catch (error) {
     console.error('Error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       error: 'Server error',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -87,13 +80,27 @@ const getAllTransactions = async (req, res) => {
 const addTransaction = async (req, res) => {
   console.log('Données reçues:', req.body);
 
-  if (!req.body.amount || !req.body.type) {
+  const { amount, type, description, date, categoryId } = req.body;
+
+  if (!amount || !type) {
     return res.status(400).json({ message: 'amount et type sont obligatoires.' });
   }
 
-  const { amount, type, description, date, categoryId } = req.body;
-
   try {
+    const category = await Category.findByPk(categoryId);
+    if (!category) {
+      return res.status(400).json({ message: "Catégorie inexistante ou invalide." });
+    }
+
+    const user = await User.findByPk(req.user.id);
+
+    if (type === 'expense' && parseFloat(user.balance) < parseFloat(amount)) {
+      return res.status(400).json({
+        message: "Le solde est insuffisant pour effectuer cette dépense.",
+        balanceActuel: user.balance
+      });
+    }
+
     const transaction = await Transaction.create({
       amount,
       type,
@@ -103,18 +110,32 @@ const addTransaction = async (req, res) => {
       UserId: req.user.id,
     });
 
-    const user = await User.findByPk(req.user.id);
     if (type === 'income') {
       user.balance += parseFloat(amount);
     } else {
       user.balance -= parseFloat(amount);
     }
+
     await user.save();
 
-    res.status(201).json(transaction);
+    res.status(201).json({
+      message: "Transaction créée avec succès.",
+      transaction,
+      balance: user.balance
+    });
+
   } catch (error) {
     console.error('Erreur addTransaction:', error);
-    res.status(500).json({ message: 'Server error' });
+
+    if (error.name === 'SequelizeValidationError') {
+      const messages = error.errors.map(e => e.message);
+      return res.status(400).json({
+        message: "Échec de la création de la transaction.",
+        errors: messages
+      });
+    }
+
+    res.status(500).json({ message: 'Erreur serveur. Veuillez réessayer plus tard.' });
   }
 };
 
@@ -128,21 +149,28 @@ const deleteTransaction = async (req, res) => {
     });
 
     if (!transaction) {
-      return res.status(404).json({ message: 'Transaction not found' });
+      return res.status(404).json({ message: 'Transaction non trouvée' });
     }
 
     const user = await User.findByPk(req.user.id);
+
     if (transaction.type === 'income') {
       user.balance -= parseFloat(transaction.amount);
     } else {
       user.balance += parseFloat(transaction.amount);
     }
-    await user.save();
 
+    await user.save();
     await transaction.destroy();
-    res.json({ message: 'Transaction removed' });
+
+    res.json({
+      message: 'Transaction supprimée avec succès.',
+      balance: user.balance
+    });
+
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    console.error('Erreur deleteTransaction:', error);
+    res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
