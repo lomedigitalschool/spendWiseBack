@@ -109,7 +109,7 @@ const passwordResetRequestController = async (req, res) => {
       .json({ message: "Cet utilisateur n'est pas inscrit" });
   }
   //generation d'un token  et d'un temps d'expirartion
-  const token = tokenGenerator;
+  const token = tokenGenerator();
   const expiration = Date.now() + 30 * 60 * 1000; // Expire dans 15 min
   const link = `/api/users/reset-password?token=${token}`;
 
