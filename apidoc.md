@@ -37,15 +37,14 @@ Cette documentation couvre tous les endpoints disponibles dans le backend **Spen
 
 ---
 
-## 4📊 Dashboard
+## 4 Page de budget 
 
-**GET** /api/dashboard
+**GET** /api/budgets
 > Retourne :
 - Info utilisateur
 - Solde
 - Revenu et dépenses du mois courant
 - 5 dernières transactions
-- Objectifs en cours
 - Résumé par catégorie
 
 **Headers**
@@ -86,50 +85,13 @@ Cette documentation couvre tous les endpoints disponibles dans le backend **Spen
 
 ---
 
-## 🎯 Objectifs (Goals)
-### 9. Créer un objectif
-**POST** /api/goals
-> Crée un objectif.
-
-**Body JSON**
-```json
-{
-  "targetAmount": 1000,
-  "frequency": "monthly",
-  "CategoryId": 1
-}
-```
-### 10. Lister les objectifs
-**GET** /api/goals
-> Liste les objectifs de l’utilisateur.
 
 
-### 11. Modifier un objectif
-**PUT**/api/goals/:id
-> Modifie un objectif.
-**Body JSON**
-```json
-{
-  "targetAmount": 100000,
-  "frequency": "monthly",
-  "CategoryId": 1
-}
 
-
-### 12. Supprimer un objectif
-
-**DELETE** /api/goals/:id
-> Supprime un objectif.
-
-
-**Headers pour tous**
-- `Authorization: Bearer <token>`
-
----
 
 ## 🏷️ Catégories
 
-### 13. Créer une catégorie
+### 9. Créer une catégorie
 
 **POST** /api/categories
 > Ajoute une nouvelle catégorie.
@@ -150,7 +112,7 @@ Cette documentation couvre tous les endpoints disponibles dans le backend **Spen
 
 
 
-### 14. Lister les catégories
+### 10. Lister les catégories
 **GET** /api/categories
 > Liste des catégories.
 
@@ -159,21 +121,18 @@ Cette documentation couvre tous les endpoints disponibles dans le backend **Spen
 ## 📈 Statistiques
 
 
-### 15. Statistiques par catégorie
+### 11. Statistiques par catégorie
 **GET** /api/stats/transactions/stats/categories
 > Donne les dépenses et revenus par catégorie (type income/expense).
 
 
-### 16. Statistiques mensuelles
+### 12. Statistiques mensuelles
 
 **GET** /api/stats/transactions/stats/monthly?year=2025
 > Donne les revenus et dépenses mensuels pour une année.
 
 
-### 17. Comparaison des objectifs
 
-**GET** '/api/stats/goals/compare'
-> Compare la progression des objectifs (currentAmount vs targetAmount).
 
 **Headers pour tous**
 - `Authorization: Bearer <token>`
@@ -189,9 +148,8 @@ Cette documentation couvre tous les endpoints disponibles dans le backend **Spen
 | POST    | /api/users/register                           | Non              | Inscription utilisateur            |
 | POST    | /api/users/login                              | Non              | Connexion utilisateur              |
 | GET     | /api/users/profile                            | Oui              | Profil utilisateur
-
-|GET      | /api/dashboard         |                      |Oui               | View  
-utilisateur Dashboard
+|GET      |  /api/users/balance                           |Oui               |Modification du solde initial
+|POST     |  /api/users/balance                           |Oui               |Recuperation du solde initial        |
 
 | POST    | /api/transactions                             | Oui     |Créer une transaction    
 
@@ -203,11 +161,6 @@ utilisateur Dashboard
 
 | GET     | /api/transactions/all                         | Oui  | Lister en tableau toutes les transactions sans pagination    |
 
-
-| POST    | /api/goals                                    | Oui     | Créer un objectif                  |
-| GET     | /api/goals                                    | Oui     | Lister les objectifs               |
-| PUT     | /api/goals/:id                                | Oui     | Modifier un objectif               |
-| DELETE  | /api/goals/:id                                | Oui     | Supprimer un objectif              |
 | POST    | /api/categories                               | Oui     | Créer une catégorie                |
 | GET     | /api/categories                               | Non     | Lister les catégories              |
 | GET     | /api/stats/transactions/stats/categories      | Oui     | Statistiques par catégorie         |
@@ -215,7 +168,7 @@ utilisateur Dashboard
 | GET     | /api/stats/goals/compare                      | Oui     | Comparaison des objectifs          |
 
 
-## 📌 Remarques
+## 13📌 Remarques
 
 - Toutes les routes marquées "JWT requis" nécessitent un token dans l'en-tête :
   ```

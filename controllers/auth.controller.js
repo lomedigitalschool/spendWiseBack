@@ -1,6 +1,8 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const db = require("../models");
+const { tokenGenerator } = require("../utils/tokenGenerator");
+const nodemailer = require("nodemailer");
 const User = db.User;
 require("dotenv").config();
 
@@ -10,6 +12,8 @@ const generateToken = (user) => {
     expiresIn: "30d",
   });
 };
+
+const tokenDB = new Map();
 
 // REGISTER
 const register = async (req, res) => {
@@ -94,43 +98,49 @@ const getUserProfile = async (req, res) => {
       .json({ message: "Erreur serveur", error: error.message });
   }
 };
-// REINITIALISATION DU MOT DE PASSE
-const passwordReset = async (req, res) => {
-  const { newPassword } = req.body;
-  const { token } = req.query;
 
-  const { email, expiration } = tokenDB.get(token);
+const passwordResetRequestController = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ where: { email } });
 
-  if (Date.now() > expiration) {
-    return res.status(400).json({ error: "le lien  est expiré" });
+  if (!user) {
+    return res
+      .status(400)
+      .json({ message: "Cet utilisateur n'est pas inscrit" });
   }
+  //generation d'un token  et d'un temps d'expirartion
+  const token = tokenGenerator();
+  const expiration = Date.now() + 30 * 60 * 1000; // Expire dans 15 min
+  const link = `/api/users/reset-password?token=${token}`;
 
-  const passwordHash = await bcrypt.hash(newPassword, 10);
+  const sender = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Reinitialisation du mot de passe",
+    html: `<p> cliquez sur ce lien 👇 </p> <a style="display:bloc; width: 15px ; height : 8px; padding: 5px 8px; background-color=oklch(35.9% 0.144 278.697); border-radius:5px" href="${link}">Pour reinitialiser votre mot de passe</a>`,
+  };
 
   try {
-    const update = await User.update(
-      { password: passwordHash },
-      { where: { email: email } }
-    );
-
-    update !== 0
-      ? res.status(200).json({ message: "le mot de passe a été reinitialisé" })
-      : res
-          .status(400)
-          .json({ message: "Aucun utilisateur trouvé avec cet email" });
+    await sender.sendMail(mailOptions);
+    res.status(200).json({ message: "Email envoyé avec succès !", token });
+    tokenDB.set(token, { email, expiration });
   } catch (error) {
     console.error(error);
-    res.status(500).json({
-      error: "erreur serveur lors de la reinintialisation du mot de passe",
-    });
+    res.status(500).json({ error: "Erreur lors de l'envoi de l'email" });
   }
 };
-
 // ✅ Export correct
 module.exports = {
   register,
   login,
   getUserProfile,
   generateToken,
-  passwordReset,
+  passwordResetRequestController,
 };

@@ -1,3 +1,5 @@
 node_modules/
 .env
 .DS_Store
+seeders/20250615100327-default-categories.js
+seeders/
