@@ -135,12 +135,45 @@ const passwordResetRequestController = async (req, res) => {
     console.error(error);
     res.status(500).json({ error: "Erreur lors de l'envoi de l'email" });
   }
+  
 };
+// REINITIALISATION DU MOT DE PASSE
+const passwordReset = async (req, res) => {
+  const { newPassword } = req.body;
+  const { token } = req.query;
+
+  const { email, expiration } = tokenDB.get(token);
+
+  if (Date.now() > expiration) {
+    return res.status(400).json({ error: "le lien  est expiré" });
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+
+  try {
+    const update = await User.update(
+      { password: passwordHash },
+      { where: { email: email } }
+    );
+
+    update !== 0
+      ? res.status(200).json({ message: "le mot de passe a été reinitialisé" })
+      : res
+          .status(400)
+          .json({ message: "Aucun utilisateur trouvé avec cet email" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: "erreur serveur lors de la reinintialisation du mot de passe",
+    });
+  }
+}
 // ✅ Export correct
 module.exports = {
   register,
   login,
   getUserProfile,
   generateToken,
+  passwordReset,
   passwordResetRequestController,
 };
