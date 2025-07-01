@@ -7,9 +7,12 @@ const userController = require('../controllers/userController');
 // Routes pour l'authentification
 router.get('/profile', protect, authController.getUserProfile);
 
-
 router.post('/register', authController.register);
 router.post('/login', authController.login);
+router.post(
+  '/password-reset-request',
+  authController.passwordResetRequestController
+);
 
 // POST /api/users/balance → définir le solde initial
 router.post('/balance', auth, userController.setInitialBalance);
