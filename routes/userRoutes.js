@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
-const { protect } = require('../middleware/authMiddleware');'
+const { protect } = require('../middleware/authMiddleware');
 // Routes pour l'authentification
 router.get('/profile', protect, authController.getUserProfile);
 
