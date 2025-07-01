@@ -34,30 +34,29 @@ app.use('/api/categories', categoryRoutes);
 
 
 // Route de test
-app.get("/", (req, res) => res.send("✅ API Budget App opérationnelle"));
+app.get('/', (req, res) => res.send('✅ API Budget App opérationnelle'));
 
 // 404
 app.use((req, res) => {
-  res.status(404).json({ message: "Route non trouvée" });
+  res.status(404).json({ message: 'Route non trouvée' });
 });
 
 // Gestion d’erreurs
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({ message: "Une erreur est survenue" });
+  res.status(500).json({ message: 'Une erreur est survenue' });
 });
 
 // Démarrage du serveur avec initialisation des catégories
 const PORT = process.env.PORT || 5000;
 
-sequelize
-  .authenticate()
+sequelize.authenticate()
   .then(() => {
-    console.log("✅ Connexion à la base de données réussie");
+    console.log('✅ Connexion à la base de données réussie');
     return sequelize.sync(); // ⚠️ Ne PAS utiliser { force: true } ici
   })
   .then(async () => {
-    console.log("✅ Base de données synchronisée");
+    console.log('✅ Base de données synchronisée');
 
     // Injection des catégories par défaut si manquantes
     //await initializeDefaultCategories();
@@ -67,10 +66,7 @@ sequelize
     });
   })
   .catch((err) => {
-    console.error(
-      "❌ Erreur de synchronisation ou de connexion à la base de données :",
-      err
-    );
+    console.error('❌ Erreur de synchronisation ou de connexion à la base de données :', err);
   });
 
 module.exports = app;
