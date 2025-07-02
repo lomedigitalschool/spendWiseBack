@@ -13,6 +13,7 @@ router.post(
   '/password-reset-request',
   authController.passwordResetRequestController
 );
+router.post('password-reset', authController.passwordReset);
 
 // POST /api/users/balance → définir le solde initial
 router.post('/balance', auth, userController.setInitialBalance);
