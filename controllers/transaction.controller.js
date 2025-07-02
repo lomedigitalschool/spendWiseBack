@@ -87,7 +87,7 @@ const addTransaction = async (req, res) => {
   }
 
   try {
-    const category = await Category.findByPk(categoryId);
+    const category = await BudgetCategory.findByPk(categoryId);
     if (!category) {
       return res.status(400).json({ message: "Catégorie inexistante ou invalide." });
     }
@@ -104,10 +104,10 @@ const addTransaction = async (req, res) => {
     const transaction = await Transaction.create({
       amount,
       type,
-      date: date ? new Date(date) : new Date(),
+      transaction_date: date ? new Date(date) : new Date(),
       description,
-      CategoryId: categoryId,
-      UserId: req.user.id,
+      budget_categories_id: categoryId,
+      user_id: req.user.id,
     });
 
     if (type === 'income') {
@@ -138,7 +138,6 @@ const addTransaction = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur. Veuillez réessayer plus tard.' });
   }
 };
-
 // @desc    Delete a transaction
 // @route   DELETE /api/transactions/:id
 // @access  Private
