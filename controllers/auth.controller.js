@@ -1,28 +1,38 @@
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-const db = require("../models");
-const { tokenGenerator } = require("../utils/tokenGenerator");
-const nodemailer = require("nodemailer");
-const User = db.User;
-require("dotenv").config();
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { User } = require('../models');
+require('dotenv').config();
 
-// Fonction pour générer un token JWT
+// 🔐 Fonction pour générer un token JWT
 const generateToken = (user) => {
   return jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
   });
 };
 
-const tokenDB = new Map();
-
-// REGISTER
+// ✅ ENREGISTREMENT (REGISTER)
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // Validation simple côté backend (à renforcer si besoin)
+    const nameRegex = /^[A-Za-z]{4,}$/;
+    if (!nameRegex.test(name)) {
+      return res.status(400).json({ message: "Nom invalide. Minimum 4 lettres, sans chiffre ou caractère spécial." });
+    }
+
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ message: "Adresse email invalide." });
+    }
+
+    if (!password || password.length < 4 || /\s/.test(password)) {
+      return res.status(400).json({ message: "Mot de passe invalide. Minimum 4 caractères, sans espace." });
+    }
+
     const existingUser = await User.findOne({ where: { email } });
-    if (existingUser)
-      return res.status(400).json({ message: "Email déjà utilisé." });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email déjà utilisé.' });
+    }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -30,36 +40,28 @@ const register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      balance: 0, // Valeur par défaut
+      balance: 0,
+      has_set_balance: false
     });
 
-    return res
-      .status(201)
-      .json({ message: "Utilisateur créé avec succès", userId: user.id });
+    return res.status(201).json({ message: 'Compte créé avec succès.', userId: user.id });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Erreur serveur", error: error.message });
+    console.error("Erreur lors de l'inscription :", error);
+    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 };
 
-// LOGIN
+//✅ CONNEXION (LOGIN)
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ where: { email } });
-    if (!user)
-      return res
-        .status(400)
-        .json({ message: "Email ou mot de passe incorrect." });
-
+    if (!user) return res.status(400).json({ message: 'Email ou mot de passe incorrect.' });
+    
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res
-        .status(400)
-        .json({ message: "Email ou mot de passe incorrect." });
-
+    if (!isMatch) return res.status(400).json({ message: 'Email ou mot de passe incorrect.' });
+    
     const token = generateToken(user); // Utilise ta fonction définie
 
     return res.status(200).json({
@@ -87,93 +89,19 @@ const getUserProfile = async (req, res) => {
     const user = await User.findByPk(userId, {
       attributes: ["id", "name", "email", "balance"],
     });
-
-    if (!user)
-      return res.status(404).json({ message: "Utilisateur non trouvé." });
+    
+    if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé.' });
 
     return res.status(200).json({ user });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Erreur serveur", error: error.message });
-  }
-};
-
-const passwordResetRequestController = async (req, res) => {
-  const { email } = req.body;
-  const user = await User.findOne({ where: { email } });
-
-  if (!user) {
-    return res
-      .status(400)
-      .json({ message: "Cet utilisateur n'est pas inscrit" });
-  }
-  //generation d'un token  et d'un temps d'expirartion
-  const token = tokenGenerator();
-  const expiration = Date.now() + 30 * 60 * 1000; // Expire dans 15 min
-  const link = `/api/users/reset-password?token=${token}`;
-
-  const sender = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: "Reinitialisation du mot de passe",
-    html: `<p> cliquez sur ce lien 👇 </p> <a style="display:bloc; width: 15px ; height : 8px; padding: 5px 8px; background-color=oklch(35.9% 0.144 278.697); border-radius:5px" href="${link}">Pour reinitialiser votre mot de passe</a>`,
+    } catch (error) {
+      return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    }
   };
 
-  try {
-    await sender.sendMail(mailOptions);
-    res.status(200).json({ message: "Email envoyé avec succès !", token });
-    tokenDB.set(token, { email, expiration });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Erreur lors de l'envoi de l'email" });
-  }
-  
-};
-// REINITIALISATION DU MOT DE PASSE
-const passwordReset = async (req, res) => {
-  const { newPassword } = req.body;
-  const { token } = req.query;
-
-  const { email, expiration } = tokenDB.get(token);
-
-  if (Date.now() > expiration) {
-    return res.status(400).json({ error: "le lien  est expiré" });
-  }
-
-  const passwordHash = await bcrypt.hash(newPassword, 10);
-
-  try {
-    const update = await User.update(
-      { password: passwordHash },
-      { where: { email: email } }
-    );
-
-    update !== 0
-      ? res.status(200).json({ message: "le mot de passe a été reinitialisé" })
-      : res
-          .status(400)
-          .json({ message: "Aucun utilisateur trouvé avec cet email" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      error: "erreur serveur lors de la reinintialisation du mot de passe",
-    });
-  }
-}
-// ✅ Export correct
+// ✅ Exportation
 module.exports = {
   register,
   login,
   getUserProfile,
-  generateToken,
-  passwordReset,
-  passwordResetRequestController,
+  generateToken
 };

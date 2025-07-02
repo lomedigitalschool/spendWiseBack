@@ -5,7 +5,6 @@ const { protect } = require('../middleware/authMiddleware');
 const userController = require('../controllers/userController');
 
 // Routes pour l'authentification
-router.get('/profile', protect, authController.getUserProfile);
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
