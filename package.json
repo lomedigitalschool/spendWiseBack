@@ -8,7 +8,9 @@
     "moment": "^2.30.1",
     "pg": "^8.16.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "nodemailer": "^7.0.3",
+    "crypto": "^1.0.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

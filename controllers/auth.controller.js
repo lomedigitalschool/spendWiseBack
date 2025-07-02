@@ -5,7 +5,9 @@ require('dotenv').config();
 
 // 🔐 Fonction pour générer un token JWT
 const generateToken = (user) => {
-  return jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' });
+  return jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
 };
 
 // ✅ ENREGISTREMENT (REGISTER)
@@ -63,17 +65,19 @@ const login = async (req, res) => {
     const token = generateToken(user); // Utilise ta fonction définie
 
     return res.status(200).json({
-      message: 'Connexion réussie',
+      message: "Connexion réussie",
       token,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
-        balance: user.balance
-      }
+        balance: user.balance,
+      },
     });
   } catch (error) {
-    return res.status(500).json({ message: 'Erreur serveur', error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Erreur serveur", error: error.message });
   }
 };
 
@@ -83,7 +87,7 @@ const getUserProfile = async (req, res) => {
     const userId = req.user.id;
 
     const user = await User.findByPk(userId, {
-      attributes: ['id', 'name', 'email', 'balance']
+      attributes: ["id", "name", "email", "balance"],
     });
     
     if (!user) return res.status(404).json({ message: 'Utilisateur non trouvé.' });

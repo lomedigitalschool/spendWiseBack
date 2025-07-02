@@ -1,80 +1,43 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+'use strict';
 
-// Initialisation des modèles
-const User = require('./user.model')(sequelize, DataTypes);
-const Category = require('./category.model')(sequelize, DataTypes);
-const Transaction = require('./transaction.model')(sequelize, DataTypes);
-const Goal = require('./goal.model')(sequelize, DataTypes);
+const fs = require('fs');
+const path = require('path');
+const Sequelize = require('sequelize');
+const basename = path.basename(__filename);
+const env = process.env.NODE_ENV || 'development';
+const config = require(__dirname + '/../config/config.js')[env];
 
-// Associations
+const db = {};
 
-// 🔗 User -> Transaction
-User.hasMany(Transaction, {
-  foreignKey: {
-    name: 'UserId',
-    allowNull: false
-  },
-  onDelete: 'CASCADE'
-});
-Transaction.belongsTo(User, {
-  foreignKey: {
-    name: 'UserId',
-    allowNull: false
+let sequelize;
+if (config.use_env_variable) {
+  sequelize = new Sequelize(process.env[config.use_env_variable], config);
+} else {
+  sequelize = new Sequelize(config.database, config.username, config.password, config);
+}
+
+// Charger tous les fichiers de modèles (hors index.js)
+fs.readdirSync(__dirname)
+  .filter(file => {
+    return (
+      file.indexOf('.') !== 0 &&
+      file !== basename &&
+      file.slice(-3) === '.js'
+    );
+  })
+  .forEach(file => {
+    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+    db[model.name] = model;
+  });
+
+// Appliquer les associations si définies
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
   }
 });
 
-// 🔗 User -> Goal
-User.hasMany(Goal, {
-  foreignKey: {
-    name: 'UserId',
-    allowNull: false
-  },
-  onDelete: 'CASCADE'
-});
-Goal.belongsTo(User, {
-  foreignKey: {
-    name: 'UserId',
-    allowNull: false
-  }
-});
+db.sequelize = sequelize;
+db.Sequelize = Sequelize;
 
-// 🔗 Category -> Transaction
-Category.hasMany(Transaction, {
-  foreignKey: {
-    name: 'CategoryId',
-    allowNull: true // SET NULL autorisé
-  },
-  onDelete: 'SET NULL'
-});
-Transaction.belongsTo(Category, {
-  foreignKey: {
-    name: 'CategoryId',
-    allowNull: true
-  }
-});
-
-// 🔗 Category -> Goal
-Category.hasMany(Goal, {
-  foreignKey: {
-    name: 'CategoryId',
-    allowNull: true // SET NULL autorisé
-  },
-  onDelete: 'SET NULL'
-});
-Goal.belongsTo(Category, {
-  foreignKey: {
-    name: 'CategoryId',
-    allowNull: true
-  }
-});
-
-// Exportation
-module.exports = {
-  sequelize,
-  Sequelize,
-  User,
-  Category,
-  Transaction,
-  Goal,
-};
+module.exports = db;
