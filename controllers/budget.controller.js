@@ -2,98 +2,83 @@ const { Budget, BudgetCategory, Category, Transaction } = require('../models');
 const { validationResult } = require('express-validator');
 const { Op } = require('sequelize');
 
-const createBudget = async (req, res) => {
+const updateSingleBudgetCategory = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
+    const { budgetId, categoryId } = req.params;
     const userId = req.user.id;
-    const { name, month, year, categories } = req.body;
+    const { allocated_amount, alert_threshold } = req.body;
 
-    // Vérification doublon de budget
-    const existingBudget = await Budget.findOne({
+    // Vérification ownership
+    const budget = await Budget.findOne({ 
+      where: { id: budgetId, user_id: userId } 
+    });
+    if (!budget) {
+      return res.status(404).json({ message: "Budget non trouvé ou non autorisé." });
+    }
+
+    // Vérification lien catégorie/budget
+    const budgetCategory = await BudgetCategory.findOne({
       where: {
-        user_id: userId,
-        month,
-        year
+        budget_id: budgetId,
+        category_id: categoryId
+      }
+    });
+    if (!budgetCategory) {
+      return res.status(404).json({ message: "Catégorie non liée à ce budget." });
+    }
+
+    // Mise à jour
+    budgetCategory.allocated_amount = allocated_amount;
+    budgetCategory.alert_threshold = alert_threshold;
+    await budgetCategory.save();
+
+    // Calcul des indicateurs
+    const transactions = await Transaction.findAll({
+      where: {
+        budget_categories_id: budgetCategory.id,
+        type: 'expense'
       }
     });
 
-    if (existingBudget) {
-      return res.status(400).json({ 
-        message: "Un budget existe déjà pour ce mois et cette année." 
+    const totalSpent = transactions.reduce((sum, t) => sum + t.amount, 0);
+    const percentSpent = Math.min(
+      Math.round((totalSpent / allocated_amount) * 100),
+      100
+    );
+
+    const alerts = [];
+    if (percentSpent >= alert_threshold) {
+      alerts.push({
+        categoryId,
+        message: `Alerte: ${percentSpent}% du budget dépensé`,
+        threshold: alert_threshold
       });
     }
 
-    // Calcul du total alloué
-    const total_amount = categories.reduce(
-      (sum, cat) => sum + parseFloat(cat.allocated_amount),
-      0
-    );
-
-    // Création du budget
-    const newBudget = await Budget.create({
-      name,
-      month,
-      year,
-      user_id: userId,
-      total_amount
-    });
-
-    // Gestion des catégories
-    const categoryRecords = await Promise.all(
-      categories.map(async (cat) => {
-        const [category] = await Category.findOrCreate({
-          where: { 
-            name: cat.name, 
-            user_id: userId 
-          },
-          defaults: { 
-            name: cat.name, 
-            user_id: userId 
-          }
-        });
-
-        return {
-          budget_id: newBudget.id,
-          category_id: category.id,
-          allocated_amount: cat.allocated_amount,
-          alert_threshold: cat.alert_threshold || 100, // Valeur par défaut
-        };
-      })
-    );
-
-    await BudgetCategory.bulkCreate(categoryRecords);
-
-    // Récupération du budget complet avec relations
-    const createdBudget = await Budget.findByPk(newBudget.id, {
-      include: [
-        {
-          model: Category,
-          through: { 
-            attributes: ['allocated_amount', 'alert_threshold'] 
-          }
-        }
-      ]
-    });
-
-    return res.status(201).json({
-      message: "Budget créé avec succès.",
-      budget: createdBudget,
-      total_amount
+    return res.status(200).json({
+      message: "Catégorie mise à jour avec succès",
+      updatedCategory: budgetCategory,
+      analytics: {
+        totalSpent,
+        percentSpent,
+        alerts
+      }
     });
 
   } catch (error) {
-    console.error("Erreur création budget :", error);
+    console.error("Erreur updateSingleBudgetCategory:", error);
     return res.status(500).json({ 
-      message: "Erreur serveur lors de la création du budget.",
+      message: "Erreur serveur lors de la mise à jour",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
 
 module.exports = {
-  createBudget
+  updateSingleBudgetCategory
 };
