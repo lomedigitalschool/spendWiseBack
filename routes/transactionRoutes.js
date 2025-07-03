@@ -29,6 +29,6 @@ router.put('/:id', transactionController.updateTransaction);//Router pour modifi
 router.get('/all', protect, getAllTransactions); // Route pour obtenir toutes les transactions.
 
 router.route('/:id')
-  .delete(protect, deleteTransaction); // Route pour supprimer une transaction par ID
+  .delete(protect, deleteTransaction); // Route pour supprimer une transaction par ID.
 
 module.exports = router;

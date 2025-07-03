@@ -201,7 +201,7 @@ const updateTransaction = async (req, res) => {
     res.status(500).json({ message: "Erreur serveur lors de la mise à jour." });
   }
 };
-// @desc    Delete a transaction
+// @desc    Delete a transaction/supprimer une transaction
 // @route   DELETE /api/transactions/:id
 // @access  Private
 const deleteTransaction = async (req, res) => {
