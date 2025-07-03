@@ -25,7 +25,7 @@ function checkAlerts(allocatedAmount, totalSpent, alertThreshold) {
   }
 
   const percentSpent = (totalSpent / allocatedAmount) * 100; // Calcul du pourcentage de depenses
-  response.percentSpent = Math.round(percentSpent * 100) / 100;
+  response.percentSpent = Math.round(percentSpent * 100) / 100;// Arrondi au centieme
 
   if (percentSpent >= 100) {
     response.hundredPercentAlertTriggered = true;
