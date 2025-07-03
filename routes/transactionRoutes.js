@@ -21,12 +21,12 @@ const { protect } = require('../middleware/authMiddleware');  // Importation du 
 
 // ✅ Routes protégées par le middleware
 router.route('/')
-  .get(protect, getTransactions) // Route pour obtenir toutes les transactions
+  .get(protect, getTransactions) // Route pour obtenir toutes les transactions.
   .post(protect, addTransaction); // Route pour ajouter une transaction.
   // PUT - Modifier une transaction
 router.put('/:id', transactionController.updateTransaction);//Router pour modifier une transaction
 
-router.get('/all', protect, getAllTransactions); // Route pour obtenir toutes les transactions
+router.get('/all', protect, getAllTransactions); // Route pour obtenir toutes les transactions.
 
 router.route('/:id')
   .delete(protect, deleteTransaction); // Route pour supprimer une transaction par ID

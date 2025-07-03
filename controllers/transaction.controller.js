@@ -58,7 +58,7 @@ const getTransactions = async (req, res) => {
   }
 };
 
-// @desc    Get all transactions (no filters, no pagination)
+// @desc    Get all transactions (no filters, no pagination) liste des transactions
 // @route   GET /api/transactions/all
 // @access  Private
 const getAllTransactions = async (req, res) => {
