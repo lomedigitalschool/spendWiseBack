@@ -1,6 +1,6 @@
 const express = require('express'); // Importation du module express
 const router = express.Router(); // Création d’un routeur
-
+const transactionController = require('../controllers/transaction.controller'); // Importation du contrôleur de transactions
 
 const {
   getTransactions,

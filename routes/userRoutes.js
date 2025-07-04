@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
 const { protect } = require('../middleware/authMiddleware');
-const userController = require('../controllers/userController');
+const userController = require('../controllers/user.controller');
 
 // Routes pour l'authentification
 
@@ -12,14 +12,12 @@ router.post(
   '/password-reset-request',
   authController.passwordResetRequestController
 );
-router.post('password-reset', authController.passwordReset);
+router.post('/password-reset', authController.passwordReset);
 
 // POST /api/users/balance → définir le solde initial
-router.post('/balance', auth, userController.setInitialBalance);
+router.post('/balance', protect, userController.setInitialBalance);
 
 // GET /api/users/balance → récupérer le solde
-router.get('/balance', auth, userController.getBalance);
-
-
+router.get('/balance', protect, userController.getBalance);
 
 module.exports = router;
