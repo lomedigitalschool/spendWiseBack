@@ -78,7 +78,24 @@ const updateSingleBudgetCategory = async (req, res) => {
     });
   }
 };
+//recuperation des budgets
+const getBudgets = async (req , res ) => {
+  const userId = req.user.id;
+
+  try {
+    const budgets = await Budget.findAll({
+      where: { user_id: userId },
+      include: [{ model: BudgetCategory }],
+    });
+
+    res.json(budgets);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Erreur serveur' });
+  }
+}
 
 module.exports = {
-  updateSingleBudgetCategory
+  updateSingleBudgetCategory,
+  getBudgets,
 };
