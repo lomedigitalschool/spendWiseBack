@@ -54,7 +54,35 @@ const addCategory = async (req, res) => {
   }
 };
 
+
+// @desc    Delete a category by ID
+// @route   DELETE /api/categories/:id
+// @access  Private
+const deleteCategory = async (req, res) => {
+  const { id } = req.params;
+  
+
+  try {
+    const category = await Category.findByPk(id);
+
+    if (!category) {
+
+      return res.status(404).json({ message: 'Catégorie non trouvée' });
+    }
+
+    await category.destroy();
+    res.json({ message: 'Catégorie supprimée avec succès.' });
+  } catch (error) {
+    res.status(500).json({
+      message: 'Erreur lors de la suppression.',
+      error: process.env.NODE_ENV === 'development' ? error.message : null
+    });
+  }
+};
+
+
 module.exports = {
   getCategories,
-  addCategory
+  addCategory,
+  deleteCategory 
 };
