@@ -58,7 +58,7 @@ const getTransactions = async (req, res) => {
   }
 };
 
-// @desc    Get all transactions (no filters, no pagination)
+// @desc    Get all transactions (no filters, no pagination) liste des transactions
 // @route   GET /api/transactions/all
 // @access  Private
 const getAllTransactions = async (req, res) => {
@@ -87,7 +87,7 @@ const addTransaction = async (req, res) => {
   }
 
   try {
-    const category = await Category.findByPk(categoryId);
+    const category = await BudgetCategory.findByPk(categoryId);
     if (!category) {
       return res.status(400).json({ message: "Catégorie inexistante ou invalide." });
     }
@@ -104,10 +104,10 @@ const addTransaction = async (req, res) => {
     const transaction = await Transaction.create({
       amount,
       type,
-      date: date ? new Date(date) : new Date(),
+      transaction_date: date ? new Date(date) : new Date(),
       description,
-      CategoryId: categoryId,
-      UserId: req.user.id,
+      budget_categories_id: categoryId,
+      user_id: req.user.id,
     });
 
     if (type === 'income') {
@@ -138,8 +138,70 @@ const addTransaction = async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur. Veuillez réessayer plus tard.' });
   }
 };
+const updateTransaction = async (req, res) => {
+  const { amount, type, description, date, categoryId } = req.body;
 
-// @desc    Delete a transaction
+  try {
+    const transaction = await Transaction.findOne({
+      where: { id: req.params.id, user_id: req.user.id }
+    });
+
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction non trouvée" });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    const category = await BudgetCategory.findByPk(categoryId);
+
+    if (!category) {
+      return res.status(400).json({ message: "Catégorie invalide." });
+    }
+
+    // Annuler l'effet de l'ancienne transaction sur le solde
+    if (transaction.type === 'income') {
+      user.balance -= parseFloat(transaction.amount);
+    } else {
+      user.balance += parseFloat(transaction.amount);
+    }
+
+    // Vérifier que le nouveau solde est suffisant (si type = dépense)
+    if (type === 'expense' && user.balance < parseFloat(amount)) {
+      return res.status(400).json({
+        message: "Solde insuffisant pour cette modification.",
+        balance: user.balance
+      });
+    }
+
+    // Appliquer les nouvelles valeurs à la transaction
+    transaction.amount = amount;
+    transaction.type = type;
+    transaction.description = description;
+    transaction.transaction_date = date ? new Date(date) : new Date();
+    transaction.budget_categories_id = categoryId;
+
+    await transaction.save();
+
+    // Appliquer l'effet de la nouvelle transaction sur le solde
+    if (type === 'income') {
+      user.balance += parseFloat(amount);
+    } else {
+      user.balance -= parseFloat(amount);
+    }
+
+    await user.save();
+
+    res.json({
+      message: "Transaction mise à jour avec succès.",
+      transaction,
+      balance: user.balance
+    });
+
+  } catch (error) {
+    console.error('Erreur updateTransaction:', error);
+    res.status(500).json({ message: "Erreur serveur lors de la mise à jour." });
+  }
+};
+// @desc    Delete a transaction/supprimer une transaction
 // @route   DELETE /api/transactions/:id
 // @access  Private
 const deleteTransaction = async (req, res) => {
@@ -178,5 +240,6 @@ module.exports = {
   getTransactions,
   addTransaction,
   deleteTransaction,
-  getAllTransactions
+  getAllTransactions,
+  updateTransaction
 };
