@@ -1,11 +1,12 @@
+'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('Categories', {
+    await queryInterface.createTable('categories', {
       id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
       user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: 'Users', key: 'id' },
+        references: { model: 'users', key: 'id' },
         onDelete: 'CASCADE'
       },
       name: { type: Sequelize.STRING, allowNull: false },
@@ -20,9 +21,13 @@ module.exports = {
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
+    await queryInterface.addConstraint('categories', {
+      fields: ['user_id', 'name'],
+      type: 'unique',
+      name: 'unique_category_name_per_user'
+    });
   },
-
   down: async (queryInterface) => {
-    await queryInterface.dropTable('Categories');
+    await queryInterface.dropTable('categories');
   }
 };

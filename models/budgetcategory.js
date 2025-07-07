@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
     allocated_amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false, validate: { min: 0 } },
     alert_threshold: { type: DataTypes.INTEGER, validate: { min: 0, max: 100 } }
   }, {
-    tableName: 'Budget_Categories',
+    tableName: 'budget_categories',
     timestamps: true,
     underscored: true,
     indexes: [{
@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
   BudgetCategory.associate = models => {
     BudgetCategory.belongsTo(models.Budget, { foreignKey: 'budget_id' });
     BudgetCategory.belongsTo(models.Category, { foreignKey: 'category_id' });
-    BudgetCategory.hasMany(models.Transaction, { foreignKey: 'budget_categories_id' });
+    BudgetCategory.hasMany(models.Transaction, { foreignKey: 'budget_category_id' });
   };
 
   return BudgetCategory;

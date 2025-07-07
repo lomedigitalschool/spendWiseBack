@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
     reset_token: DataTypes.STRING,
     reset_token_expiry: DataTypes.DATE
   }, {
-    tableName: 'Users',
+    tableName: 'users',
     timestamps: true,
     underscored: true
   });

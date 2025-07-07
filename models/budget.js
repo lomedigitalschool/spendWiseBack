@@ -5,9 +5,9 @@ module.exports = (sequelize, DataTypes) => {
     month: { type: DataTypes.INTEGER, allowNull: false, validate: { min: 1, max: 12 } },
     year: { type: DataTypes.INTEGER, allowNull: false },
     name: { type: DataTypes.STRING, allowNull: false },
-    amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false, validate: { min: 0 } }
+    amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false, validate: { min: 0 }, comment: 'Montant automatiquement calculé' },
   }, {
-    tableName: 'Budgets',
+    tableName: 'budgets',
     timestamps: true,
     underscored: true,
     indexes: [{
@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
 
   Budget.associate = models => {
     Budget.belongsTo(models.User, { foreignKey: 'user_id' });
-    Budget.hasMany(models.BudgetCategory, { foreignKey: 'budget_id' });
+    Budget.hasMany(models.BudgetCategory, { foreignKey: 'budget_id', as: 'budgetCategories' });
   };
 
   return Budget;

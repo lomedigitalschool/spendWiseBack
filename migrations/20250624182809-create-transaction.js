@@ -1,19 +1,19 @@
 'use strict';
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.sequelize.query(`CREATE TYPE "enum_Transactions_type" AS ENUM ('income', 'expense')`);
-    await queryInterface.createTable('Transactions', {
+    await queryInterface.sequelize.query(`CREATE TYPE "enum_transactions_type" AS ENUM ('income', 'expense')`);
+    await queryInterface.createTable('transactions', {
       id: { type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true },
       user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: 'Users', key: 'id' },
+        references: { model: 'users', key: 'id' },
         onDelete: 'CASCADE'
       },
-      budget_categories_id: {
+      budget_category_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
-        references: { model: 'Budget_Categories', key: 'id' },
+        references: { model: 'budget_categories', key: 'id' },
         onDelete: 'CASCADE'
       },
       type: { type: Sequelize.ENUM('income', 'expense'), allowNull: false },
@@ -25,7 +25,7 @@ module.exports = {
     });
   },
   down: async (queryInterface) => {
-    await queryInterface.dropTable('Transactions');
-    await queryInterface.sequelize.query(`DROP TYPE "enum_Transactions_type"`);
+    await queryInterface.dropTable('transactions');
+    await queryInterface.sequelize.query(`DROP TYPE "enum_transactions_type"`);
   }
 };
