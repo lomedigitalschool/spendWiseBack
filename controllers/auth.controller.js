@@ -2,6 +2,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 require('dotenv').config();
+const nodemailer = require('nodemailer')
+const {tokenGenerator} = require('../utils/tokenGenerator');
 
 // 🔐 Fonction pour générer un token JWT
 const generateToken = (user) => {
@@ -9,6 +11,8 @@ const generateToken = (user) => {
     expiresIn: "30d",
   });
 };
+
+const tokenDB = new Map();
 
 // ✅ ENREGISTREMENT (REGISTER)
 const register = async (req, res) => {
@@ -98,10 +102,49 @@ const getUserProfile = async (req, res) => {
     }
   };
 
+  const passwordResetRequestController = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ where: { email } });
+
+  if (!user) {
+    return res
+      .status(400)
+      .json({ message: "Cet utilisateur n'est pas inscrit" });
+  }
+  //generation d'un token  et d'un temps d'expirartion
+  const token = tokenGenerator;
+  const expiriration = Date.now() + 30 * 60 * 1000; // Expire dans 15 min
+  const link = `/api/users/reset-password?token=${token}`;
+
+  const sender = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: "Reinitialisation du mot de passe",
+    html: `<p> cliquez sur ce lien </p> <a style="display:bloc; width: 15px ; height : 8px; padding: 5px 8px; background-color=oklch(35.9% 0.144 278.697); border-radius:5px" href="${link}">Pour reinitialiser votre mot de passe</a>`,
+  };
+
+  try {
+    await sender.sendMail(mailOptions);
+    res.status(200).json({ message: "Email envoyé avec succès !", token });
+    tokenDB.set(token, { email, expiriration });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erreur lors de l'envoi de l'email" });
+  }
+};
+
 // ✅ Exportation
 module.exports = {
   register,
   login,
   getUserProfile,
-  generateToken
+  generateToken,
+  passwordResetRequestController
 };
