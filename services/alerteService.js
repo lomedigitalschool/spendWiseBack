@@ -57,12 +57,13 @@ const getCategoryAlert = async (budgetId, categoryId) => {
 
     const totalSpent = await Transaction.sum('amount', {
       where: {
-        budget_categories_id: budgetCategory.id,
+        budget_category_id: budgetCategory.id, // ✅ CORRIGÉ
         type: 'expense'
       }
     });
 
-    const category = await Category.findByPk(categoryId); // Recherche de la catégorie par ID
+    const category = await Category.findByPk(categoryId);
+
     const alert = checkAlerts(
       parseFloat(budgetCategory.allocated_amount),
       parseFloat(totalSpent || 0),
@@ -80,19 +81,20 @@ const getCategoryAlert = async (budgetId, categoryId) => {
   } catch (error) {
     console.error("Erreur getCategoryAlert :", error.message);
     if (process.env.NODE_ENV === 'production') {
-      return { 
+      return {
         error: 'Une erreur est survenue lors de la vérification des alertes',
         categoryId,
         budgetId
       };
     }
-    return { 
+    return {
       error: error.message,
       categoryId,
       budgetId
     };
   }
 };
+
 
 module.exports = {
   checkAlerts,

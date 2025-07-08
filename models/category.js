@@ -4,9 +4,13 @@ module.exports = (sequelize, DataTypes) => {
     user_id: { type: DataTypes.INTEGER, allowNull: false },
     name: { type: DataTypes.STRING, allowNull: false }
   }, {
-    tableName: 'Categories',
+    tableName: 'categories',
     timestamps: true,
-    underscored: true
+    underscored: true,
+    indexes: [{
+      unique: true,
+      fields: ['user_id', 'name']
+    }]
   });
 
   Category.associate = models => {

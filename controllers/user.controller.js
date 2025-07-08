@@ -1,7 +1,7 @@
 const { User } = require('../models');
 
 // POST: définir le solde initial
-exports.setInitialBalance = async (req, res) => {
+const setInitialBalance = async (req, res) => {
   const userId = req.user.id;
   const { balance } = req.body;
 
@@ -31,7 +31,7 @@ exports.setInitialBalance = async (req, res) => {
 };
 
 // GET: récupérer le solde de l'utilisateur
-exports.getBalance = async (req, res) => {
+const getBalance = async (req, res) => {
   const userId = req.user.id;
 
   try {
@@ -50,4 +50,9 @@ exports.getBalance = async (req, res) => {
     console.error("Erreur getBalance:", error);
     return res.status(500).json({ message: "Erreur serveur." });
   }
+};
+
+module.exports = {
+  setInitialBalance,
+  getBalance
 };
