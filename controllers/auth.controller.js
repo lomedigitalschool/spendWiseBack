@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const { User } = require('../models');
 require('dotenv').config();
+const nodemailer = require('nodemailer')
+const {tokenGenerator} = require('../utils/tokenGenerator');
 
 // Générateur de token simple (à améliorer en prod)
 const tokenGenerator = () => Math.random().toString(36).substr(2, 12);
@@ -15,6 +17,8 @@ const generateToken = (user) => {
     expiresIn: "30d",
   });
 };
+
+const tokenDB = new Map();
 
 // ✅ ENREGISTREMENT (REGISTER)
 const register = async (req, res) => {
