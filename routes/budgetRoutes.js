@@ -29,7 +29,7 @@ router.patch(
 router.get(
   '/:id',
   authMiddleware.protect,
-  budgetController.updateBudget
+  budgetController.getBudgetById
 );
 
 // GET /api/budgets - Récupérer tous les budgets de l'utilisateur
@@ -44,6 +44,13 @@ router.get(
   '/:budgetId/alerts',
   authMiddleware.protect,
   budgetController.getBudgetAlerts
+);
+
+// GET /api/budgets/:budgetId/alerts/check - Vérifier les alertes d'un budget pour une catégorie
+router.get(
+  '/:budgetId/alerts/check',
+  authMiddleware.protect,
+  budgetController.checkBudgetAlert
 );
 
 // PATCH /api/budgets/:budgetId/categories/:categoryId - Mettre à jour une catégorie

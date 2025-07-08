@@ -1,6 +1,7 @@
 const { Budget, BudgetCategory, Category, Transaction } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../models');
+const { getCategoryAlert } = require('../services/alerteService');
 
 const createBudget = async (req, res) => {
   const t = await sequelize.transaction();
@@ -8,7 +9,6 @@ const createBudget = async (req, res) => {
     const { name, month, year, categories } = req.body;
     const userId = req.user.id;
 
-    // Validation manuelle supplémentaire
     if (!categories || !Array.isArray(categories) || categories.length === 0) {
       await t.rollback();
       return res.status(400).json({
@@ -17,22 +17,22 @@ const createBudget = async (req, res) => {
       });
     }
 
-    // Création du budget
+    const totalAmount = categories.reduce((sum, cat) => sum + (parseFloat(cat.allocated_amount) || 0), 0);
+
     const budget = await Budget.create({
       name,
       month,
       year,
       user_id: userId,
-      amount: categories.reduce((sum, cat) => sum + parseFloat(cat.allocated_amount), 0)
+      amount: totalAmount
     }, { transaction: t });
 
-    // Création des catégories
     const createdCategories = await Promise.all(
       categories.map(async cat => {
         const [category] = await Category.findOrCreate({
-          where: { 
+          where: {
             name: cat.name.trim(),
-            user_id: userId 
+            user_id: userId
           },
           defaults: {
             name: cat.name.trim(),
@@ -44,7 +44,7 @@ const createBudget = async (req, res) => {
         return BudgetCategory.create({
           budget_id: budget.id,
           category_id: category.id,
-          allocated_amount: cat.allocated_amount,
+          allocated_amount: parseFloat(cat.allocated_amount) || 0,
           alert_threshold: cat.alert_threshold || 80
         }, { transaction: t });
       })
@@ -79,8 +79,7 @@ const updateBudget = async (req, res) => {
     const userId = req.user.id;
     const { name, month, year, categories } = req.body;
 
-    // Vérification du budget
-    const budget = await Budget.findOne({ 
+    const budget = await Budget.findOne({
       where: { id, user_id: userId },
       transaction: t
     });
@@ -93,25 +92,24 @@ const updateBudget = async (req, res) => {
       });
     }
 
-    // Mise à jour du budget
     if (name) budget.name = name;
     if (month) budget.month = month;
     if (year) budget.year = year;
+
     await budget.save({ transaction: t });
 
-    // Mise à jour des catégories
-    if (categories) {
-      await BudgetCategory.destroy({ 
+    if (categories && Array.isArray(categories)) {
+      await BudgetCategory.destroy({
         where: { budget_id: id },
-        transaction: t 
+        transaction: t
       });
 
       await BudgetCategory.bulkCreate(
         categories.map(cat => ({
           budget_id: id,
           category_id: cat.id,
-          allocated_amount: cat.allocated_amount,
-          alert_threshold: cat.alert_threshold
+          allocated_amount: parseFloat(cat.allocated_amount) || 0,
+          alert_threshold: cat.alert_threshold || 80
         })),
         { transaction: t }
       );
@@ -119,16 +117,18 @@ const updateBudget = async (req, res) => {
 
     await t.commit();
 
+    const updatedBudget = await Budget.findByPk(id, {
+      include: [{
+        model: BudgetCategory,
+        as: 'budgetCategories',
+        include: [Category]
+      }]
+    });
+
     return res.status(200).json({
       success: true,
       message: 'Budget mis à jour avec succès',
-      data: await Budget.findByPk(id, {
-        include: [{
-          model: BudgetCategory,
-          as: 'budgetCategories',
-          include: [Category]
-        }]
-      })
+      data: updatedBudget
     });
 
   } catch (error) {
@@ -169,12 +169,16 @@ const getBudgets = async (req, res) => {
   }
 };
 
+/**
+ * GET /budgets/:budgetId/alerts
+ * Retourne toutes les catégories du budget ayant déclenché une alerte
+ */
 const getBudgetAlerts = async (req, res) => {
   try {
     const { budgetId } = req.params;
     const userId = req.user.id;
 
-    // Vérification du budget
+    // verification de l'existence du budget
     const budget = await Budget.findOne({
       where: { id: budgetId, user_id: userId }
     });
@@ -185,35 +189,19 @@ const getBudgetAlerts = async (req, res) => {
         message: 'Budget non trouvé'
       });
     }
-
-    // Récupération des alertes
-    const categories = await BudgetCategory.findAll({
-      where: { budget_id: budgetId },
-      include: [
-        { model: Category, attributes: ['id', 'name'] },
-        { 
-          model: Transaction, 
-          where: { type: 'expense' },
-          required: false,
-          attributes: ['amount'] 
-        }
-      ]
+     
+    // Recuperation des catégories liées à ce budget
+    const budgetCategories = await BudgetCategory.findAll({
+      where: { budget_id: budgetId }
     });
-
-    const alerts = categories.map(cat => {
-      const totalSpent = cat.Transactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
-      const percentSpent = Math.min(Math.round((totalSpent / cat.allocated_amount) * 100), 100);
-      
-      return {
-        category_id: cat.category_id,
-        category_name: cat.Category.name,
-        allocated_amount: cat.allocated_amount,
-        spent: totalSpent,
-        percent_spent: percentSpent,
-        alert_threshold: cat.alert_threshold,
-        has_alert: percentSpent >= cat.alert_threshold
-      };
-    }).filter(cat => cat.has_alert);
+      // Utilisation de getCategoryAlert pour chaque catégorie
+    const alerts = (
+      await Promise.all(
+        budgetCategories.map(cat =>
+          getCategoryAlert(budgetId, cat.category_id)
+        )
+      )
+    ).filter(alert => alert && (alert.thresholdAlertTriggered || alert.hundredPercentAlertTriggered));
 
     return res.status(200).json({
       success: true,
@@ -230,26 +218,79 @@ const getBudgetAlerts = async (req, res) => {
   }
 };
 
+/**
+ * GET /budgets/:budgetId/check-alert?categoryId=...
+ * Vérifie si une catégorie déclenche une alerte
+ */
+const checkBudgetAlert = async (req, res) => {
+  try {
+    const { budgetId } = req.params;
+    const { categoryId } = req.query;
+    const userId = req.user.id;
+
+    // Vérification de l'existence du budget
+    const budget = await Budget.findOne({
+      where: { id: budgetId, user_id: userId }
+    });
+
+    if (!budget) {
+      return res.status(404).json({
+        success: false,
+        message: 'Budget non trouvé'
+      });
+    }
+
+    const alert = await getCategoryAlert(budgetId, categoryId);
+
+    if (!alert) {
+      return res.status(404).json({
+        success: false,
+        message: 'Catégorie de budget non trouvée'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: alert
+    });
+
+  } catch (error) {
+    console.error("Erreur vérification alerte:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Erreur lors de la vérification de l'alerte",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
 const updateSingleBudgetCategory = async (req, res) => {
-  const t = await sequelize.transaction();  
+  const t = await sequelize.transaction();
   try {
     const { budgetId, categoryId } = req.params;
     const userId = req.user.id;
-    const { allocated_amount, alert_threshold } = req.body; 
-    // Vérification du budget
-    const budget = await Budget.findOne({   
-      where: { id: budgetId, user_id: userId },
-      transaction: t
-    }); 
-    if (!budget) {
-      await t.rollback(); 
-      return res.status(404).json({
-        success: false,
-        message: 'Budget non trouvé'  
-      }); 
+    const { allocated_amount, alert_threshold } = req.body;
+
+    if (isNaN(allocated_amount) || allocated_amount < 0) {
+      return res.status(400).json({ success: false, message: "Montant alloué invalide" });
     }
 
-    // Vérification de la catégorie
+    if (isNaN(alert_threshold) || alert_threshold < 0 || alert_threshold > 100) {
+      return res.status(400).json({ success: false, message: "Seuil d'alerte invalide" });
+    }
+
+    const budget = await Budget.findOne({
+      where: { id: budgetId, user_id: userId },
+      transaction: t
+    });
+
+    if (!budget) {
+      await t.rollback();
+      return res.status(404).json({
+        success: false,
+        message: 'Budget non trouvé'
+      });
+    }
+
     const budgetCategory = await BudgetCategory.findOne({
       where: { budget_id: budgetId, category_id: categoryId },
       transaction: t
@@ -261,12 +302,13 @@ const updateSingleBudgetCategory = async (req, res) => {
         success: false,
         message: 'Catégorie non trouvée'
       });
-    } 
+    }
 
-    budgetCategory.allocated_amount = allocated_amount;
-    budgetCategory.alert_threshold = alert_threshold;
-    await budgetCategory.save({ transaction: t });  
-    await t.commit();   
+    budgetCategory.allocated_amount = parseFloat(allocated_amount);
+    budgetCategory.alert_threshold = parseInt(alert_threshold);
+    await budgetCategory.save({ transaction: t });
+    await t.commit();
+
     return res.status(200).json({
       success: true,
       message: 'Catégorie de budget mise à jour avec succès',
@@ -277,19 +319,50 @@ const updateSingleBudgetCategory = async (req, res) => {
     console.error('Erreur mise à jour catégorie budget:', error);
     return res.status(500).json({
       success: false,
-      message: 'Erreur lors de la mise à jour de la catégorie de budget',
+      message: "Erreur lors de la mise à jour de la catégorie de budget",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
 
-
+const getBudgetById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const budget = await Budget.findOne({
+      where: { id, user_id: userId },
+      include: [{
+        model: BudgetCategory,
+        as: 'budgetCategories',
+        include: [Category]
+      }]
+    });
+    if (!budget) {
+      return res.status(404).json({
+        success: false,
+        message: 'Budget non trouvé'
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      data: budget
+    });
+  } catch (error) {
+    console.error('Erreur récupération budget par ID:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la récupération du budget',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
 
 module.exports = {
   createBudget,
   updateBudget,
   getBudgets,
   getBudgetAlerts,
-  updateSingleBudgetCategory
-
+  updateSingleBudgetCategory,
+  checkBudgetAlert,
+  getBudgetById
 };
