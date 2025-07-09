@@ -9,15 +9,30 @@ const createBudget = async (req, res) => {
     const { name, month, year, categories } = req.body;
     const userId = req.user.id;
 
-    if (!categories || !Array.isArray(categories) || categories.length === 0) {
+    // Filtrer les catégories sans nom valide
+    let filteredCategories = categories.filter(cat => cat.name && cat.name.trim() !== '');
+    // Filtrer les doublons par nom (insensible à la casse et aux espaces)
+    const seen = new Set();
+    filteredCategories = filteredCategories.filter(cat => {
+      const key = (cat.name || '').trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // LOG: Affiche le payload reçu
+    console.log("Payload reçu pour création budget:", req.body);
+    console.log("Catégories filtrées:", filteredCategories);
+
+    if (!filteredCategories || !Array.isArray(filteredCategories) || filteredCategories.length === 0) {
       await t.rollback();
       return res.status(400).json({
         success: false,
-        message: 'Le format des catégories est invalide'
+        message: 'Aucune catégorie valide.'
       });
     }
 
-    const totalAmount = categories.reduce((sum, cat) => sum + (parseFloat(cat.allocated_amount) || 0), 0);
+    const totalAmount = filteredCategories.reduce((sum, cat) => sum + (parseFloat(cat.allocated_amount) || 0), 0);
 
     const budget = await Budget.create({
       name,
@@ -104,15 +119,40 @@ const updateBudget = async (req, res) => {
         transaction: t
       });
 
-      await BudgetCategory.bulkCreate(
-        categories.map(cat => ({
-          budget_id: id,
-          category_id: cat.id,
-          allocated_amount: parseFloat(cat.allocated_amount) || 0,
-          alert_threshold: cat.alert_threshold || 80
-        })),
-        { transaction: t }
+      // S'assurer que chaque catégorie existe et récupérer son id
+      const budgetCategoryData = await Promise.all(
+        categories.map(async cat => {
+          let categoryId = cat.id;
+          if (!categoryId) {
+            // Si pas d'id, on tente de trouver ou créer la catégorie par son nom
+            const [category] = await Category.findOrCreate({
+              where: { name: cat.name.trim(), user_id: userId },
+              defaults: { name: cat.name.trim(), user_id: userId },
+              transaction: t
+            });
+            categoryId = category.id;
+          } else {
+            // Vérifier que la catégorie existe bien pour cet utilisateur
+            const category = await Category.findOne({ where: { id: categoryId, user_id: userId }, transaction: t });
+            if (!category) {
+              // Si l'id ne correspond à rien, on la crée
+              const [newCategory] = await Category.findOrCreate({
+                where: { name: cat.name.trim(), user_id: userId },
+                defaults: { name: cat.name.trim(), user_id: userId },
+                transaction: t
+              });
+              categoryId = newCategory.id;
+            }
+          }
+          return {
+            budget_id: id,
+            category_id: categoryId,
+            allocated_amount: parseFloat(cat.allocated_amount) || 0,
+            alert_threshold: cat.alert_threshold || 80
+          };
+        })
       );
+      await BudgetCategory.bulkCreate(budgetCategoryData, { transaction: t });
     }
 
     await t.commit();
