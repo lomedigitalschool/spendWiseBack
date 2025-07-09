@@ -8,12 +8,22 @@ const {
   validateBudgetUpdate,
   validateBudgetCategoryUpdate 
 } = require('../middleware/validators/budgetValidator');
+const { validationResult } = require('express-validator');
+
+function handleValidationErrors(req, res, next) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+}
 
 // POST /api/budgets - Créer un nouveau budget
 router.post(
   '/',
   authMiddleware.protect,
   validateBudgetCreation,
+  handleValidationErrors,
   budgetController.createBudget
 );
 
@@ -22,6 +32,7 @@ router.patch(
   '/:id',
   authMiddleware.protect,
   validateBudgetUpdate,
+  handleValidationErrors,
   budgetController.updateBudget
 );
 
@@ -58,6 +69,7 @@ router.patch(
   '/:budgetId/categories/:categoryId',
   authMiddleware.protect,
   validateBudgetCategoryUpdate,
+  handleValidationErrors,
   budgetController.updateSingleBudgetCategory
 );
 
