@@ -11,14 +11,24 @@ const createBudget = async (req, res) => {
 
     // Filtrer les catégories sans nom valide
     let filteredCategories = categories.filter(cat => cat.name && cat.name.trim() !== '');
-    // Filtrer les doublons par nom (insensible à la casse et aux espaces)
-    const seen = new Set();
-    filteredCategories = filteredCategories.filter(cat => {
+    // Vérification explicite des doublons par nom (insensible à la casse et aux espaces)
+    const nameMap = {};
+    let duplicateName = null;
+    for (const cat of filteredCategories) {
       const key = (cat.name || '').trim().toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+      if (nameMap[key]) {
+        duplicateName = cat.name.trim();
+        break;
+      }
+      nameMap[key] = true;
+    }
+    if (duplicateName) {
+      await t.rollback();
+      return res.status(400).json({
+        success: false,
+        message: `Impossible de créer le budget : deux catégories portent le même nom (« ${duplicateName} »). Veuillez corriger.`
+      });
+    }
 
     // LOG: Affiche le payload reçu
     console.log("Payload reçu pour création budget:", req.body);
@@ -82,7 +92,8 @@ const createBudget = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Erreur lors de la création du budget',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      code: error.original?.code || error.code
     });
   }
 };
@@ -94,69 +105,119 @@ const updateBudget = async (req, res) => {
     const userId = req.user.id;
     const { name, month, year, categories } = req.body;
 
+    // Validation du nom
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      await t.rollback();
+      return res.status(400).json({ success: false, message: 'Le nom du budget est requis.' });
+    }
+
+    // Validation des catégories
+    if (!Array.isArray(categories) || categories.length === 0) {
+      await t.rollback();
+      return res.status(400).json({ success: false, message: 'Au moins une catégorie est requise.' });
+    }
+
+    // Validation des champs de chaque catégorie
+    const seen = new Set();
+    for (const cat of categories) {
+      if (!cat.name || typeof cat.name !== 'string' || cat.name.trim() === '') {
+        await t.rollback();
+        return res.status(400).json({ success: false, message: "Le nom de chaque catégorie est requis." });
+      }
+      const key = cat.name.trim().toLowerCase();
+      if (seen.has(key)) {
+        await t.rollback();
+        return res.status(400).json({ success: false, message: "Doublon de catégorie: " + cat.name });
+      }
+      seen.add(key);
+      if (isNaN(cat.allocated_amount) || Number(cat.allocated_amount) <= 0) {
+        await t.rollback();
+        return res.status(400).json({ success: false, message: `Le montant alloué pour la catégorie '${cat.name}' doit être un nombre positif.` });
+      }
+      if (isNaN(cat.alert_threshold) || Number(cat.alert_threshold) < 1 || Number(cat.alert_threshold) > 100) {
+        await t.rollback();
+        return res.status(400).json({ success: false, message: `Le pourcentage d'alerte pour la catégorie '${cat.name}' doit être entre 1 et 100.` });
+      }
+    }
+
+    // Récupérer le budget
     const budget = await Budget.findOne({
       where: { id, user_id: userId },
       transaction: t
     });
-
     if (!budget) {
       await t.rollback();
-      return res.status(404).json({
-        success: false,
-        message: 'Budget non trouvé'
-      });
+      return res.status(404).json({ success: false, message: 'Budget non trouvé' });
     }
 
-    if (name) budget.name = name;
+    // Mettre à jour le nom et la période
+    budget.name = name;
     if (month) budget.month = month;
     if (year) budget.year = year;
-
     await budget.save({ transaction: t });
 
-    if (categories && Array.isArray(categories)) {
-      await BudgetCategory.destroy({
-        where: { budget_id: id },
+    // Récupérer les catégories existantes pour ce budget
+    const existingBudgetCategories = await BudgetCategory.findAll({
+      where: { budget_id: id },
+      include: [Category],
+      transaction: t
+    });
+
+    // Pour suppression : trouver les catégories à retirer
+    const incomingCategoryNames = categories.map(cat => cat.name.trim().toLowerCase());
+    const toDelete = existingBudgetCategories.filter(bc => !incomingCategoryNames.includes(bc.Category.name.trim().toLowerCase()));
+    for (const bc of toDelete) {
+      await bc.destroy({ transaction: t });
+    }
+
+    // Pour ajout/mise à jour
+    for (const cat of categories) {
+      // Trouver ou créer la catégorie (globale)
+      let category = null;
+      if (cat.id) {
+        category = await Category.findOne({ where: { id: cat.id, user_id: userId }, transaction: t });
+      }
+      if (!category) {
+        // Par nom
+        [category] = await Category.findOrCreate({
+          where: { name: cat.name.trim(), user_id: userId },
+          defaults: { name: cat.name.trim(), user_id: userId },
+          transaction: t
+        });
+      }
+      // Vérifier si la catégorie existe déjà dans ce budget
+      let budgetCategory = await BudgetCategory.findOne({
+        where: { budget_id: id, category_id: category.id },
         transaction: t
       });
-
-      // S'assurer que chaque catégorie existe et récupérer son id
-      const budgetCategoryData = await Promise.all(
-        categories.map(async cat => {
-          let categoryId = cat.id;
-          if (!categoryId) {
-            // Si pas d'id, on tente de trouver ou créer la catégorie par son nom
-            const [category] = await Category.findOrCreate({
-              where: { name: cat.name.trim(), user_id: userId },
-              defaults: { name: cat.name.trim(), user_id: userId },
-              transaction: t
-            });
-            categoryId = category.id;
-          } else {
-            // Vérifier que la catégorie existe bien pour cet utilisateur
-            const category = await Category.findOne({ where: { id: categoryId, user_id: userId }, transaction: t });
-            if (!category) {
-              // Si l'id ne correspond à rien, on la crée
-              const [newCategory] = await Category.findOrCreate({
-                where: { name: cat.name.trim(), user_id: userId },
-                defaults: { name: cat.name.trim(), user_id: userId },
-                transaction: t
-              });
-              categoryId = newCategory.id;
-            }
-          }
-          return {
-            budget_id: id,
-            category_id: categoryId,
-            allocated_amount: parseFloat(cat.allocated_amount) || 0,
-            alert_threshold: cat.alert_threshold || 80
-          };
-        })
-      );
-      await BudgetCategory.bulkCreate(budgetCategoryData, { transaction: t });
+      if (budgetCategory) {
+        // Mise à jour
+        budgetCategory.allocated_amount = parseFloat(cat.allocated_amount);
+        budgetCategory.alert_threshold = parseInt(cat.alert_threshold);
+        await budgetCategory.save({ transaction: t });
+      } else {
+        // Ajout
+        await BudgetCategory.create({
+          budget_id: id,
+          category_id: category.id,
+          allocated_amount: parseFloat(cat.allocated_amount),
+          alert_threshold: parseInt(cat.alert_threshold)
+        }, { transaction: t });
+      }
     }
+
+    // Recalculer le montant total du budget
+    const updatedBudgetCategories = await BudgetCategory.findAll({
+      where: { budget_id: id },
+      transaction: t
+    });
+    const totalAmount = updatedBudgetCategories.reduce((sum, bc) => sum + (parseFloat(bc.allocated_amount) || 0), 0);
+    budget.amount = totalAmount;
+    await budget.save({ transaction: t });
 
     await t.commit();
 
+    // Retourner le budget mis à jour avec ses catégories
     const updatedBudget = await Budget.findByPk(id, {
       include: [{
         model: BudgetCategory,
@@ -170,14 +231,14 @@ const updateBudget = async (req, res) => {
       message: 'Budget mis à jour avec succès',
       data: updatedBudget
     });
-
   } catch (error) {
     await t.rollback();
     console.error('Erreur mise à jour budget:', error);
     return res.status(500).json({
       success: false,
       message: 'Erreur lors de la mise à jour du budget',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      code: error.original?.code || error.code
     });
   }
 };

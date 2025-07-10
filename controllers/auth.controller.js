@@ -49,7 +49,16 @@ const register = async (req, res) => {
       has_set_balance: false
     });
 
-    return res.status(201).json({ message: 'Compte créé avec succès.', userId: user.id });
+    const token = generateToken(user);
+
+    return res.status(201).json({ message: 'Compte créé avec succès.', token,
+  user: {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    has_set_balance: user.has_set_balance,
+  } 
+});
   } catch (error) {
     
     console.error("Erreur lors de l'inscription :", error);
@@ -77,7 +86,7 @@ const login = async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        balance: user.balance,
+        has_set_balance: user.has_set_balance,
       },
     });
   } catch (error) {
