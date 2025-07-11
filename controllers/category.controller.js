@@ -8,14 +8,13 @@ const getCategories = async (req, res) => {
   
   try {
       console.log("===> getCategories lancé");
-    console.log("req.user:", req.user); // 👀 Doit afficher l’utilisateur
+    console.log("req.user:", req.user); 
 
     const userId = req.user?.id;
 
     if (!userId) {
       return res.status(401).json({ message: 'Utilisateur non authentifié.' });
     }
-
 
   
     const categories = await Category.findAll({
