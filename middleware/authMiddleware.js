@@ -25,7 +25,8 @@ const authMiddleware =  async (req, res, next) => {
 
     // Attacher l'utilisateur complet à la requête
     req.user = user;
-    
+
+  
   
 
     next(); // Passage au contrôleur

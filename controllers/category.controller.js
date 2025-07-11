@@ -1,13 +1,27 @@
-const { Category } = require('../models');
+const { Category, BudgetCategory } = require('../models');
 
 // @desc    Get all categories
 // @route   GET /api/categories
 // @access  Public
 const getCategories = async (req, res) => {
+
+  
   try {
+      console.log("===> getCategories lancé");
+    console.log("req.user:", req.user); // 👀 Doit afficher l’utilisateur
+
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Utilisateur non authentifié.' });
+    }
+
+
+  
     const categories = await Category.findAll({
-      attributes: ['id', 'name'],
-      order: [['name', 'ASC']]
+       where: { user_id: userId },
+       attributes: ['id', 'name'],
+       order: [['name', 'ASC']]
     });
     res.json(categories);
   } catch (error) {
@@ -22,17 +36,17 @@ const getCategories = async (req, res) => {
 // @route   POST /api/categories
 // @access  Private (Admin)
 const addCategory = async (req, res) => {
-  const { name } = req.body;
+    console.log('Requête reçue avec body:', req.body);
+  const { name, user_id } = req.body;
 
   // Validation de l’entrée utilisateur
-  if (!name || name.trim() === '') {
+  if (!name || name.trim() === '' || !user_id) {
     return res.status(400).json({ message: 'Le nom de la catégorie est requis.' });
   }
-
   try {
     const [category, created] = await Category.findOrCreate({ 
-      where: { name: name.trim() },
-      defaults: { name: name.trim() }
+      where: { name: name.trim(), user_id },
+      defaults: { name: name.trim(), user_id }
     });
 
     if (!created) {
@@ -51,15 +65,13 @@ const addCategory = async (req, res) => {
 
     res.status(500).json({
       message: 'Erreur serveur lors de la récupération.',
-      error: error.message
+       error: process.env.NODE_ENV === 'development' ? error.message : null
+      //error: error.message
     });
   }
 };
 
 // GET : Récupérer une catégorie par ID
-// @desc    Get category by ID
-// @route   GET /api/categories/:id
-// @access  Public
 const getCategoryById = async (req, res) => {
   const { id } = req.params;
   try {
@@ -83,6 +95,7 @@ const getCategoryById = async (req, res) => {
 const updateCategory = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
+  const user_id = req.user.id;
 
   if (!name || name.trim() === '') {
     return res.status(400).json({ message: 'Le nom de la catégorie est requis.' });
@@ -109,10 +122,39 @@ const updateCategory = async (req, res) => {
   }
 };
 
+const deleteCategory = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Vérifier si cette catégorie est utilisée dans budget_categories
+    const usageCount = await BudgetCategory.count({
+      where: { category_id: id }
+    });
+
+    if (usageCount > 0) {
+      return res.status(400).json({
+        message: "Impossible de supprimer cette catégorie : elle est liée a un budget."
+      });
+    }
+
+    const deleted = await Category.destroy({ where: { id } });
+
+    if (deleted === 0) {
+      return res.status(404).json({ message: "Catégorie non trouvée." });
+    }
+
+    return res.status(200).json({ message: "Catégorie supprimée avec succès." });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Erreur serveur.", error: error.message });
+  }
+};
 
 module.exports = {
   getCategories,
   addCategory,
   getCategoryById,     
-  updateCategory      
+  updateCategory,   
+  deleteCategory,  
 };
